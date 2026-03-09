@@ -1,0 +1,79 @@
+.loginPage {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #081a3a, #0f2c63);
+}
+
+.loginCard {
+  width: 380px;
+  background: white;
+  padding: 32px;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+
+.loginCard h2 {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.loginCard form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.loginCard input,
+.loginCard select {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.loginCard button {
+  margin-top: 10px;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: #1e3a8a;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.loginCard button:hover {
+  background: #162d6b;
+}
+
+.errorBox {
+  background: #ffe5e5;
+  color: #b30000;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+.loginHeader {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.logoIcon {
+  font-size: 28px;
+  margin-bottom: 6px;
+}
+
+.loginHeader h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f2c63;
+}
+
+.loginHeader p {
+  margin: 4px 0 0 0;
+  font-size: 13px;
+  color: #666;
+}

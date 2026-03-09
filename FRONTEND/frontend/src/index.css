@@ -1,0 +1,10 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+body {
+  background: #f3f4f6;
+  font-family: Arial, sans-serif;
+}
+.dark { background:#0b132b; color:white; }
+.light { background:white; color:black; }

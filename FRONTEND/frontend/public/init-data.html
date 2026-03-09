@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Initialize Data</title>
+</head>
+<body>
+    <h1>Initialize Application Data</h1>
+    <button onclick="initData()">Click to Initialize Data</button>
+    <div id="result"></div>
+
+    <script>
+        function initData() {
+            // Clear existing data
+            localStorage.clear();
+            
+            // Initialize 4 active + 4 pending lessons
+            const defaultLessons = [
+                // Active lessons
+                { id: 1, title: 'Introduction to Phishing', subject: 'Phishing Basics', description: 'Learn the basics of phishing attacks and how to identify them', content: '<h3>What is Phishing?</h3><p>Phishing is a cybercrime where attackers impersonate legitimate organizations to steal sensitive information.</p><h4>Common Types:</h4><ul><li>Email Phishing</li><li>SMS Phishing (Smishing)</li><li>Voice Phishing (Vishing)</li></ul>', icon: '🎣', level: 'Beginner', duration: '15 min', isFree: true, status: 'active', createdAt: new Date().toISOString() },
+                { id: 2, title: 'Email Security Best Practices', subject: 'Email Security', description: 'Essential tips for identifying and avoiding email-based threats', content: '<h3>Email Red Flags</h3><p>Learn to spot suspicious emails before they cause damage.</p><h4>Warning Signs:</h4><ul><li>Urgent or threatening language</li><li>Spelling and grammar errors</li><li>Suspicious sender addresses</li><li>Unexpected attachments</li></ul>', icon: '📧', level: 'Beginner', duration: '20 min', isFree: true, status: 'active', createdAt: new Date().toISOString() },
+                { id: 3, title: 'URL Analysis and Safe Browsing', subject: 'URL Security', description: 'Advanced techniques for analyzing suspicious URLs and links', content: '<h3>URL Inspection Techniques</h3><p>Master the art of identifying malicious links before clicking.</p><h4>Key Checks:</h4><ul><li>Domain spelling variations</li><li>HTTPS vs HTTP</li><li>Suspicious characters</li><li>Shortened URL services</li></ul>', icon: '🔗', level: 'Intermediate', duration: '25 min', isFree: true, status: 'active', createdAt: new Date().toISOString() },
+                { id: 4, title: 'Password Security Fundamentals', subject: 'Password Security', description: 'Learn strong password practices and protection techniques', content: '<h3>Password Best Practices</h3><p>Create and manage secure passwords effectively.</p><h4>Key Points:</h4><ul><li>Use unique passwords for each account</li><li>Enable two-factor authentication</li><li>Use password managers</li><li>Avoid common patterns</li></ul>', icon: '🔑', level: 'Beginner', duration: '20 min', isFree: true, status: 'active', createdAt: new Date().toISOString() },
+                // Pending lessons (admin will activate later)
+                { id: 5, title: 'Social Engineering Attacks', subject: 'Social Engineering', description: 'Understanding manipulation tactics and psychological attacks', content: '<h3>Social Engineering</h3><p>Recognize psychological manipulation techniques.</p>', icon: '🎭', level: 'Intermediate', duration: '30 min', isFree: true, status: 'pending', createdAt: new Date().toISOString() },
+                { id: 6, title: 'Malware and Ransomware Protection', subject: 'Malware Protection', description: 'Protect against malicious software and ransomware attacks', content: '<h3>Malware Defense</h3><p>Prevent and detect malware attacks.</p>', icon: '🛡️', level: 'Advanced', duration: '35 min', isFree: true, status: 'pending', createdAt: new Date().toISOString() },
+                { id: 7, title: 'Two-Factor Authentication', subject: 'Account Security', description: 'Learn about 2FA and multi-factor authentication', content: '<h3>2FA Security</h3><p>Enhance account security with two-factor authentication.</p>', icon: '🔐', level: 'Beginner', duration: '18 min', isFree: true, status: 'pending', createdAt: new Date().toISOString() },
+                { id: 8, title: 'Mobile Security Threats', subject: 'Mobile Security', description: 'Protect your mobile devices from security threats', content: '<h3>Mobile Security</h3><p>Secure your smartphones and tablets.</p>', icon: '📱', level: 'Intermediate', duration: '28 min', isFree: true, status: 'pending', createdAt: new Date().toISOString() }
+            ];
+            localStorage.setItem('lessons', JSON.stringify(defaultLessons));
+
+            // Initialize demo users
+            const demoUsers = [
+                { id: 1, name: 'Demo User', email: 'user@gmail.com', password: '123456', role: 'user', createdAt: new Date().toISOString() },
+                { id: 2, name: 'Demo Admin', email: 'admin@gmail.com', password: '123456', role: 'admin', createdAt: new Date().toISOString() }
+            ];
+            localStorage.setItem('registeredUsers', JSON.stringify(demoUsers));
+
+            document.getElementById('result').innerHTML = '<p style="color: green;">✅ Data initialized successfully!</p><p>Active Lessons: 4</p><p>Pending Lessons: 4 (Admin only)</p><p>Users: ' + demoUsers.length + '</p><p><strong>Now refresh the page!</strong></p>';
+        }
+    </script>
+</body>
+</html>
