@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import api from "../api";
 
 export default function Quiz() {
   const nav = useNavigate();
-  const location = useLocation();
   const [quizzes, setQuizzes] = useState([]);
   const [currentQuiz, setCurrentQuiz] = useState(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -22,7 +21,10 @@ export default function Quiz() {
   const loadQuizzes = async () => {
     try {
       const res = await api.get("/quiz/all");
-      setQuizzes(res.data);
+      const role = localStorage.getItem('role');
+      const all = Array.isArray(res.data) ? res.data : [];
+      // Admin sees all 20, users only see active quizzes (10)
+      setQuizzes(role === 'admin' ? all : all.filter(q => q.status === 'active'));
     } catch (e) {
       console.log("Error loading quizzes");
     }

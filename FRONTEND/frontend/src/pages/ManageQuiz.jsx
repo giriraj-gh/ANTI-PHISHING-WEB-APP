@@ -28,6 +28,14 @@ export default function ManageQuiz() {
     }
   };
 
+  const activateQuiz = async (id) => {
+    const quizzes = JSON.parse(localStorage.getItem('quizzes') || '[]');
+    const idx = quizzes.findIndex(q => q.id === id);
+    if (idx !== -1) quizzes[idx].status = 'active';
+    localStorage.setItem('quizzes', JSON.stringify(quizzes));
+    loadQuizzes();
+  };
+
   const saveQuiz = async () => {
     try {
       if (editId) {
@@ -203,10 +211,16 @@ export default function ManageQuiz() {
                 <span className={`badge ${quiz.isDemo ? 'demo' : 'premium'}`}>
                   {quiz.isDemo ? 'DEMO' : 'PREMIUM'}
                 </span>
+                <span className={`badge ${quiz.status === 'waiting' ? 'waiting' : 'active-badge'}`}>
+                  {quiz.status === 'waiting' ? '⏳ Waiting' : '✅ Active'}
+                </span>
                 <span className="question-count">{quiz.questions?.length || 0} Questions</span>
               </div>
             </div>
             <div className="quiz-actions">
+              {quiz.status === 'waiting' && (
+                <button onClick={() => activateQuiz(quiz.id)} className="activate-btn">🚀 Activate</button>
+              )}
               <button onClick={() => editQuiz(quiz)} className="edit-btn">✏️ Edit</button>
               <button onClick={() => deleteQuiz(quiz.id)} className="delete-btn">🗑️ Delete</button>
             </div>
@@ -399,6 +413,26 @@ export default function ManageQuiz() {
 
         .badge.premium {
           background: #8b5cf6;
+        }
+
+        .badge.waiting {
+          background: #f59e0b;
+          color: white;
+        }
+
+        .badge.active-badge {
+          background: #10b981;
+          color: white;
+        }
+
+        .activate-btn {
+          padding: 0.5rem 1rem;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 0.9rem;
+          background: #10b981;
+          color: white;
         }
 
         .question-count {
