@@ -1,8 +1,8 @@
 const router = require('express').Router();
-const ScanLog = require('../models/ScanLog');
 const auth = require('../middleware/auth');
 
 router.post('/check', auth, async (req, res) => {
+  const ScanLog = require('../models/ScanLog');
   try {
     const { url } = req.body;
     const risk = url.includes('fake') || url.includes('phish') ? 'HIGH' :
@@ -16,6 +16,7 @@ router.post('/check', auth, async (req, res) => {
 });
 
 router.get('/all', auth, async (req, res) => {
+  const ScanLog = require('../models/ScanLog');
   try {
     const filter = req.user.role === 'admin' ? {} : { userId: req.user.id };
     const logs = await ScanLog.find(filter).sort({ createdAt: -1 });

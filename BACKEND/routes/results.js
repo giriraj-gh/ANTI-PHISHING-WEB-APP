@@ -1,8 +1,8 @@
 const router = require('express').Router();
-const QuizResult = require('../models/QuizResult');
 const auth = require('../middleware/auth');
 
 router.post('/save', auth, async (req, res) => {
+  const QuizResult = require('../models/QuizResult');
   try {
     await QuizResult.create({ ...req.body, userId: req.user.id });
     res.json({ message: 'Result saved' });
@@ -12,6 +12,7 @@ router.post('/save', auth, async (req, res) => {
 });
 
 router.get('/all', auth, async (req, res) => {
+  const QuizResult = require('../models/QuizResult');
   try {
     const filter = req.user.role === 'admin' ? {} : { userId: req.user.id };
     const results = await QuizResult.find(filter).sort({ createdAt: -1 });

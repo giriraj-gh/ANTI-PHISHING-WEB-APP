@@ -1,8 +1,8 @@
 const router = require('express').Router();
-const Quiz = require('../models/Quiz');
 const auth = require('../middleware/auth');
 
 router.get('/all', async (req, res) => {
+  const Quiz = require('../models/Quiz');
   try {
     const quizzes = await Quiz.find().sort({ createdAt: 1 });
     res.json(quizzes);
@@ -12,6 +12,7 @@ router.get('/all', async (req, res) => {
 });
 
 router.post('/create', auth, async (req, res) => {
+  const Quiz = require('../models/Quiz');
   try {
     const quiz = await Quiz.create(req.body);
     res.json(quiz);
@@ -21,6 +22,7 @@ router.post('/create', auth, async (req, res) => {
 });
 
 router.put('/:id', auth, async (req, res) => {
+  const Quiz = require('../models/Quiz');
   try {
     await Quiz.findByIdAndUpdate(req.params.id, req.body);
     res.json({ message: 'Quiz updated' });
@@ -30,6 +32,7 @@ router.put('/:id', auth, async (req, res) => {
 });
 
 router.delete('/:id', auth, async (req, res) => {
+  const Quiz = require('../models/Quiz');
   try {
     await Quiz.findByIdAndDelete(req.params.id);
     res.json({ message: 'Quiz deleted' });

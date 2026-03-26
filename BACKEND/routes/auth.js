@@ -1,10 +1,12 @@
 const router = require('express').Router();
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
 const auth = require('../middleware/auth');
+const rateLimit = require('express-rate-limit');
 
-router.post('/register', async (req, res) => {
+const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
+
+router.post('/register', loginLimiter, async (req, res) => {
+  const bcrypt = require('bcryptjs');
+  const User = require('../models/User');
   try {
     const { name, email, password, role } = req.body;
     const exists = await User.findOne({ email });
@@ -17,7 +19,10 @@ router.post('/register', async (req, res) => {
   }
 });
 
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
+  const bcrypt = require('bcryptjs');
+  const jwt = require('jsonwebtoken');
+  const User = require('../models/User');
   try {
     const { email, password, role } = req.body;
     const user = await User.findOne({ email, role });
@@ -32,6 +37,7 @@ router.post('/login', async (req, res) => {
 });
 
 router.get('/profile', auth, async (req, res) => {
+  const User = require('../models/User');
   try {
     const user = await User.findById(req.user.id).select('-password');
     res.json(user);
@@ -41,6 +47,7 @@ router.get('/profile', auth, async (req, res) => {
 });
 
 router.put('/profile', auth, async (req, res) => {
+  const User = require('../models/User');
   try {
     await User.findByIdAndUpdate(req.user.id, req.body);
     res.json({ message: 'Profile updated' });
