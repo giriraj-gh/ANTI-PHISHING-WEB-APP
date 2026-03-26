@@ -16,7 +16,7 @@ const seedDatabase = async () => {
     await Lesson.deleteMany({});
     await Quiz.deleteMany({});
 
-    const hashedPassword = await bcrypt.hash('123456', 10);
+    const hashedPassword = await bcrypt.hash(process.env.SEED_PASSWORD || 'demo123456', 10);
     
     await User.create([
       { name: 'Demo User', email: 'user@gmail.com', password: hashedPassword, role: 'user' },
