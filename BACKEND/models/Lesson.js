@@ -8,7 +8,7 @@ const lessonSchema = new mongoose.Schema({
   level: { type: String, enum: ['Beginner', 'Intermediate', 'Advanced'], default: 'Beginner' },
   duration: { type: String, default: '10 min' },
   isFree: { type: Boolean, default: false },
-  status: { type: String, enum: ['active', 'pending', 'waiting'], default: 'active' }
+  status: { type: String, default: 'active' }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Lesson', lessonSchema);
