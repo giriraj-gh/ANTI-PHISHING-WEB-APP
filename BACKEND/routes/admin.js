@@ -12,6 +12,33 @@ router.get('/users', auth, async (req, res) => {
   }
 });
 
+router.get('/pending-users', auth, async (req, res) => {
+  try {
+    const users = await User.find({ status: 'pending' }).select('-password');
+    res.json(users);
+  } catch (e) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.put('/approve-user/:id', auth, async (req, res) => {
+  try {
+    await User.findByIdAndUpdate(req.params.id, { status: 'approved' });
+    res.json({ message: 'User approved' });
+  } catch (e) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.put('/reject-user/:id', auth, async (req, res) => {
+  try {
+    await User.findByIdAndUpdate(req.params.id, { status: 'rejected' });
+    res.json({ message: 'User rejected' });
+  } catch (e) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 router.get('/stats', auth, async (req, res) => {
   try {
     const logs = await ScanLog.find();

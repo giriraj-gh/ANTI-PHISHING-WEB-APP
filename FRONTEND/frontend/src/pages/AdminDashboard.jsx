@@ -6,6 +6,7 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = useState({ high: 0, medium: 0, low: 0 });
   const [users, setUsers] = useState([]);
+  const [pendingUsers, setPendingUsers] = useState([]);
   const [reports, setReports] = useState([]);
   const [quizResults, setQuizResults] = useState([]);
   const [admin, setAdmin] = useState(null);
@@ -32,21 +33,40 @@ export default function AdminDashboard() {
 
   const fetchData = async () => {
     try {
-      const scanHistory = JSON.parse(localStorage.getItem('scanHistory') || '[]');
-      const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]').filter(u => u.role === 'user');
-      
-      const high = scanHistory.filter(s => s.risk === 'HIGH').length;
-      const medium = scanHistory.filter(s => s.risk === 'MEDIUM').length;
-      const low = scanHistory.filter(s => s.risk === 'LOW').length;
-      
-      setStats({ high, medium, low });
-      setUsers(users);
-      setReports(scanHistory.slice(-10).reverse());
-      setQuizResults(JSON.parse(localStorage.getItem('quizResults') || '[]').slice(-10).reverse());
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+      const API = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+      const [usersRes, pendingRes, statsRes] = await Promise.all([
+        fetch(`${API}/api/admin/users`, { headers }),
+        fetch(`${API}/api/admin/pending-users`, { headers }),
+        fetch(`${API}/api/admin/stats`, { headers })
+      ]);
+      const usersData = await usersRes.json();
+      const pendingData = await pendingRes.json();
+      const statsData = await statsRes.json();
+
+      setUsers(Array.isArray(usersData) ? usersData : []);
+      setPendingUsers(Array.isArray(pendingData) ? pendingData : []);
+      setStats(statsData);
       setAdmin(JSON.parse(localStorage.getItem('user')));
     } catch (error) {
       console.error('Error fetching data:', error);
     }
+  };
+
+  const handleApprove = async (id) => {
+    const token = localStorage.getItem('token');
+    const API = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+    await fetch(`${API}/api/admin/approve-user/${id}`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` } });
+    fetchData();
+  };
+
+  const handleReject = async (id) => {
+    const token = localStorage.getItem('token');
+    const API = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+    await fetch(`${API}/api/admin/reject-user/${id}`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` } });
+    fetchData();
   };
 
   const handleLogout = () => {
@@ -178,6 +198,28 @@ export default function AdminDashboard() {
           )) : (
             <div className="no-data">No quiz results yet</div>
           )}
+        </div>
+      </div>
+
+      {/* Pending Users Approval */}
+      <div className="users-section" style={{ borderLeft: '4px solid #f59e0b' }}>
+        <h3 className="section-title">⏳ Pending Approval ({pendingUsers.length})</h3>
+        <div className="users-list">
+          {pendingUsers.length === 0 ? (
+            <div className="no-data">No pending requests</div>
+          ) : pendingUsers.map(user => (
+            <div key={user._id} className="user-item">
+              <div className="user-info">
+                <div className="user-name">👤 {user.name}</div>
+                <div className="user-email">{user.email}</div>
+                <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>Role: {user.role}</div>
+              </div>
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button onClick={() => handleApprove(user._id)} style={{ padding: '0.5rem 1.25rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>✅ Approve</button>
+                <button onClick={() => handleReject(user._id)} style={{ padding: '0.5rem 1.25rem', background: '#dc2626', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>❌ Reject</button>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
