@@ -10,7 +10,7 @@ router.get('/all', async (req, res) => {
 
 router.post('/create', auth, async (req, res) => {
   try {
-    res.json(await Lesson.create(req.body));
+    res.json(await Lesson.create({ ...req.body, status: 'active' }));
   } catch (e) { res.status(500).json({ message: 'Server error' }); }
 });
 
