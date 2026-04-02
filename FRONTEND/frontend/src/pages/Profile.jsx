@@ -148,28 +148,6 @@ export default function Profile() {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Phone Number</label>
-            <input
-              className="form-input"
-              type="tel"
-              placeholder="+1 (555) 123-4567"
-              value={form.phone || ""}
-              onChange={e => setForm({ ...form, phone: e.target.value })}
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Address</label>
-            <textarea
-              className="form-input"
-              placeholder="Enter your address"
-              rows="2"
-              value={form.address || ""}
-              onChange={e => setForm({ ...form, address: e.target.value })}
-            />
-          </div>
-
-          <div className="form-group">
             <label className="form-label">Bio</label>
             <textarea
               className="form-input"
