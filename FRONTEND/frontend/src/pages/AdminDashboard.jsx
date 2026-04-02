@@ -111,30 +111,6 @@ export default function AdminDashboard() {
           <button onClick={handleLogout} style={{ padding: '0.6rem 1rem', background: 'linear-gradient(45deg,#dc2626,#b91c1c)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>🚪 Logout</button>
         </div>
       </div>
-      <div className="dashboard-header">
-        <div className="header-left">
-          <div className="admin-avatar">
-            {admin?.profilePicture ? (
-              <img src={admin.profilePicture} alt="Admin" className="avatar-img" />
-            ) : (
-              <div className="avatar-placeholder">👨💼</div>
-            )}
-          </div>
-          <div className="admin-info">
-            <h1>Admin Dashboard</h1>
-            <p className="admin-subtitle">Welcome back, {admin?.name || 'Admin'}</p>
-            {admin?.age && <p className="admin-age">Age: {admin.age}</p>}
-          </div>
-        </div>
-        <div className="header-actions">
-          <button className="btn-profile" onClick={() => navigate('/profile')}>👤 Profile</button>
-          <button className="btn-lessons" onClick={() => navigate('/admin/manage-lessons')}>📚 Lessons</button>
-          <button className="btn-quiz" onClick={() => navigate('/admin/manage-quiz')}>📝 Quiz</button>
-          <button className="btn-scan" onClick={() => navigate('/scan')}>🔍 Quick Scan</button>
-          <button className="btn-logout" onClick={handleLogout}>🚪 Logout</button>
-        </div>
-      </div>
-
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
         {[{title:'High Risk',value:stats.high,icon:'🚨',color:'#dc2626'},{title:'Medium Risk',value:stats.medium,icon:'⚡',color:'#f59e0b'},{title:'Active Users',value:users.length,icon:'👥',color:'#10b981'},{title:'Pending',value:notifications,icon:'⏳',color:'#f59e0b'}].map(s => (
