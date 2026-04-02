@@ -43,6 +43,8 @@ export default function AdminDashboard() {
     } catch (e) { console.error(e); }
   };
 
+  const isSuperAdmin = admin?.email === 'giriraja.ec23@bitsathy.ac.in';
+
   const handleApprove = async (id) => {
     const API = process.env.REACT_APP_API_URL || 'http://localhost:5000';
     await fetch(`${API}/api/admin/approve-user/${id}`, { method: 'PUT', headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
@@ -179,7 +181,8 @@ export default function AdminDashboard() {
         </ResponsiveContainer>
       </div>
 
-      {/* Pending Users with Bulk Actions */}
+      {/* Pending Users with Bulk Actions - Super Admin Only */}
+      {isSuperAdmin && (
       <div style={{ background: cardBg, padding: '1.5rem', borderRadius: '16px', border: `1px solid ${borderColor}`, marginBottom: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
           <h3 style={{ margin: 0, color: '#f59e0b' }}>⏳ Pending Approval ({pendingUsers.length})</h3>
@@ -209,6 +212,8 @@ export default function AdminDashboard() {
           ))
         }
       </div>
+
+      )}
 
       {/* Users List with Delete */}
       <div style={{ background: cardBg, padding: '1.5rem', borderRadius: '16px', border: `1px solid ${borderColor}` }}>

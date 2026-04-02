@@ -10,6 +10,8 @@ const transporter = nodemailer.createTransport({
 });
 const sendMail = (to, subject, html) => transporter.sendMail({ from: process.env.EMAIL_USER, to, subject, html }).catch(console.error);
 
+const SUPER_ADMIN = 'giriraja.ec23@bitsathy.ac.in';
+
 router.get('/users', auth, async (req, res) => {
   try {
     const users = await User.find({ role: 'user' }).select('-password');
@@ -26,6 +28,8 @@ router.get('/pending-users', auth, async (req, res) => {
 
 router.put('/approve-user/:id', auth, async (req, res) => {
   try {
+    const admin = await User.findById(req.user.id);
+    if (admin.email !== SUPER_ADMIN) return res.status(403).json({ message: 'Not authorized.' });
     const user = await User.findByIdAndUpdate(req.params.id, { status: 'approved' }, { new: true });
     sendMail(user.email, '✅ Account Approved',
       `<h2>Your account has been approved!</h2><p>Hi ${user.name}, your account has been approved. You can now login.</p><a href="${process.env.FRONTEND_URL}" style="background:#10b981;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;">Login Now</a>`);
@@ -35,6 +39,8 @@ router.put('/approve-user/:id', auth, async (req, res) => {
 
 router.put('/reject-user/:id', auth, async (req, res) => {
   try {
+    const admin = await User.findById(req.user.id);
+    if (admin.email !== SUPER_ADMIN) return res.status(403).json({ message: 'Not authorized.' });
     const user = await User.findByIdAndUpdate(req.params.id, { status: 'rejected' }, { new: true });
     sendMail(user.email, '❌ Account Rejected',
       `<h2>Account Registration Update</h2><p>Hi ${user.name}, unfortunately your account registration has been rejected. Contact support for more information.</p>`);
@@ -45,6 +51,8 @@ router.put('/reject-user/:id', auth, async (req, res) => {
 // Bulk approve/reject
 router.put('/bulk-action', auth, async (req, res) => {
   try {
+    const admin = await User.findById(req.user.id);
+    if (admin.email !== SUPER_ADMIN) return res.status(403).json({ message: 'Not authorized.' });
     const { ids, action } = req.body;
     const status = action === 'approve' ? 'approved' : 'rejected';
     const users = await User.find({ _id: { $in: ids } });
