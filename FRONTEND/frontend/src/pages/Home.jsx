@@ -11,6 +11,7 @@ export default function Home() {
   const [urlInput, setUrlInput] = useState("");
   const [quizResults, setQuizResults] = useState([]);
   const [userStats, setUserStats] = useState({ totalScans: 0, highRisk: 0, mediumRisk: 0, lowRisk: 0 });
+  const [adminRequestStatus, setAdminRequestStatus] = useState('none');
 
   async function load() {
     try {
@@ -33,8 +34,19 @@ export default function Home() {
     try {
       const res = await api.get("/auth/profile");
       setProfile(res.data);
+      setAdminRequestStatus(res.data.adminRequest || 'none');
     } catch (e) {
       console.log("Profile not found");
+    }
+  };
+
+  const requestAdmin = async () => {
+    try {
+      await api.post('/admin/request-admin');
+      setAdminRequestStatus('pending');
+      alert('Admin request sent! Wait for approval from the super admin.');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error sending request');
     }
   };
 
@@ -88,11 +100,23 @@ export default function Home() {
           <button onClick={() => nav("/scan-history")} className="btn-history">📋 History</button>
           <button onClick={() => nav("/profile")} className="btn-profile">👤 Profile</button>
           <button onClick={() => nav("/report")} className="btn-report">🚨 Report</button>
-          <button onClick={() => { 
+          {adminRequestStatus === 'none' && (
+            <button onClick={requestAdmin} className="btn-admin-req">👑 Request Admin</button>
+          )}
+          {adminRequestStatus === 'pending' && (
+            <button disabled className="btn-admin-pending">⏳ Admin Request Pending</button>
+          )}
+          {adminRequestStatus === 'approved' && (
+            <button disabled className="btn-admin-approved">✅ Admin Approved</button>
+          )}
+          {adminRequestStatus === 'rejected' && (
+            <button onClick={requestAdmin} className="btn-admin-req">🔄 Re-request Admin</button>
+          )}
+          <button onClick={() => {
             localStorage.removeItem('token');
             localStorage.removeItem('role');
             localStorage.removeItem('user');
-            nav("/"); 
+            nav("/");
           }} className="btn-logout">🚪 Logout</button>
         </div>
       </div>
@@ -353,6 +377,36 @@ export default function Home() {
         .btn-profile:hover, .btn-report:hover, .btn-logout:hover, .btn-history:hover {
           transform: translateY(-2px);
           box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .btn-admin-req {
+          padding: 0.75rem 1.5rem;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          font-weight: 600;
+          transition: all 0.3s ease;
+          background: linear-gradient(45deg, #8b5cf6, #7c3aed);
+          color: white;
+        }
+        .btn-admin-req:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(139,92,246,0.3); }
+        .btn-admin-pending {
+          padding: 0.75rem 1.5rem;
+          border: none;
+          border-radius: 8px;
+          font-weight: 600;
+          background: rgba(245,158,11,0.3);
+          color: #f59e0b;
+          cursor: not-allowed;
+        }
+        .btn-admin-approved {
+          padding: 0.75rem 1.5rem;
+          border: none;
+          border-radius: 8px;
+          font-weight: 600;
+          background: rgba(16,185,129,0.3);
+          color: #10b981;
+          cursor: not-allowed;
         }
 
         .quick-scanner {

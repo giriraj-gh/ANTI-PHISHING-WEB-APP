@@ -12,6 +12,7 @@ export default function AdminDashboard() {
   const [selected, setSelected] = useState([]);
   const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'true');
   const [notifications, setNotifications] = useState(0);
+  const [adminRequests, setAdminRequests] = useState([]);
 
   const chartData = [
     { name: 'High Risk', value: stats.high, color: '#dc2626' },
@@ -27,18 +28,20 @@ export default function AdminDashboard() {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
       const API = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-      const [usersRes, pendingRes, statsRes, trendsRes, notifRes] = await Promise.all([
+      const [usersRes, pendingRes, statsRes, trendsRes, notifRes, adminReqRes] = await Promise.all([
         fetch(`${API}/api/admin/users`, { headers }),
         fetch(`${API}/api/admin/pending-users`, { headers }),
         fetch(`${API}/api/admin/stats`, { headers }),
         fetch(`${API}/api/admin/trends`, { headers }),
-        fetch(`${API}/api/admin/notifications`, { headers })
+        fetch(`${API}/api/admin/notifications`, { headers }),
+        fetch(`${API}/api/admin/admin-requests`, { headers })
       ]);
       setUsers(await usersRes.json());
       setPendingUsers(await pendingRes.json());
       setStats(await statsRes.json());
       setTrendData(await trendsRes.json());
       setNotifications((await notifRes.json()).pendingCount);
+      setAdminRequests(await adminReqRes.json());
       const profileRes = await fetch(`${API}/api/auth/profile`, { headers });
       const profileData = await profileRes.json();
       setAdmin(profileData);
@@ -72,6 +75,12 @@ export default function AdminDashboard() {
     if (!window.confirm('Delete this user permanently?')) return;
     const API = process.env.REACT_APP_API_URL || 'http://localhost:5000';
     await fetch(`${API}/api/admin/delete-user/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+    fetchData();
+  };
+
+  const handleAdminRequest = async (id, action) => {
+    const API = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+    await fetch(`${API}/api/admin/${action}-admin-request/${id}`, { method: 'PUT', headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
     fetchData();
   };
 
@@ -159,6 +168,26 @@ export default function AdminDashboard() {
           </LineChart>
         </ResponsiveContainer>
       </div>
+
+      {/* Admin Role Requests - Super Admin Only */}
+      {isSuperAdmin && adminRequests.length > 0 && (
+        <div style={{ background: cardBg, padding: '1.5rem', borderRadius: '16px', border: `2px solid #8b5cf6`, marginBottom: '2rem' }}>
+          <h3 style={{ margin: '0 0 1rem', color: '#8b5cf6' }}>👑 Admin Role Requests ({adminRequests.length})</h3>
+          {adminRequests.map(user => (
+            <div key={user._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'rgba(139,92,246,0.1)', borderRadius: '8px', borderLeft: '4px solid #8b5cf6', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <div>
+                <div style={{ fontWeight: 600 }}>👤 {user.name}</div>
+                <div style={{ opacity: 0.7, fontSize: '0.9rem' }}>{user.email}</div>
+                <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>Joined: {new Date(user.createdAt).toLocaleDateString()}</div>
+              </div>
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button onClick={() => handleAdminRequest(user._id, 'approve')} style={{ padding: '0.5rem 1.25rem', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>✅ Approve Admin</button>
+                <button onClick={() => handleAdminRequest(user._id, 'reject')} style={{ padding: '0.5rem 1.25rem', background: '#dc2626', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>❌ Reject</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Pending Users with Bulk Actions - Super Admin Only */}
       {isSuperAdmin && (

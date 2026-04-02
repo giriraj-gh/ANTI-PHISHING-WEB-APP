@@ -11,7 +11,8 @@ const userSchema = new mongoose.Schema({
   phone: String,
   address: String,
   bio: String,
-  profilePicture: String
+  profilePicture: String,
+  adminRequest: { type: String, enum: ['none', 'pending', 'approved', 'rejected'], default: 'none' }
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

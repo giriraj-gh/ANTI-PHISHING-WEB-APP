@@ -114,6 +114,51 @@ router.get('/notifications', auth, async (req, res) => {
   } catch (e) { res.status(500).json({ message: 'Server error' }); }
 });
 
+// User requests admin role
+router.post('/request-admin', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (user.role === 'admin') return res.status(400).json({ message: 'Already an admin.' });
+    if (user.adminRequest === 'pending') return res.status(400).json({ message: 'Request already pending.' });
+    await User.findByIdAndUpdate(req.user.id, { adminRequest: 'pending' });
+    sendMail(SUPER_ADMIN, '🔔 Admin Role Request',
+      `<h2>Admin Role Request</h2><p><b>Name:</b> ${user.name}</p><p><b>Email:</b> ${user.email}</p><p>This user is requesting admin access. Login to approve or reject.</p><a href="${process.env.FRONTEND_URL}" style="background:#8b5cf6;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;">Go to Dashboard</a>`);
+    res.json({ message: 'Admin request sent successfully!' });
+  } catch (e) { res.status(500).json({ message: 'Server error' }); }
+});
+
+// Get all admin requests
+router.get('/admin-requests', auth, async (req, res) => {
+  try {
+    const users = await User.find({ adminRequest: 'pending' }).select('-password');
+    res.json(users);
+  } catch (e) { res.status(500).json({ message: 'Server error' }); }
+});
+
+// Approve admin request
+router.put('/approve-admin-request/:id', auth, async (req, res) => {
+  try {
+    const admin = await User.findById(req.user.id);
+    if (admin.email !== SUPER_ADMIN) return res.status(403).json({ message: 'Not authorized.' });
+    const user = await User.findByIdAndUpdate(req.params.id, { role: 'admin', adminRequest: 'approved', status: 'approved' }, { new: true });
+    sendMail(user.email, '✅ Admin Request Approved',
+      `<h2>Your admin request has been approved!</h2><p>Hi ${user.name}, you now have admin access.</p><a href="${process.env.FRONTEND_URL}" style="background:#10b981;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;">Login Now</a>`);
+    res.json({ message: 'Admin request approved' });
+  } catch (e) { res.status(500).json({ message: 'Server error' }); }
+});
+
+// Reject admin request
+router.put('/reject-admin-request/:id', auth, async (req, res) => {
+  try {
+    const admin = await User.findById(req.user.id);
+    if (admin.email !== SUPER_ADMIN) return res.status(403).json({ message: 'Not authorized.' });
+    const user = await User.findByIdAndUpdate(req.params.id, { adminRequest: 'rejected' }, { new: true });
+    sendMail(user.email, '❌ Admin Request Rejected',
+      `<h2>Admin Request Update</h2><p>Hi ${user.name}, your request for admin access has been rejected.</p>`);
+    res.json({ message: 'Admin request rejected' });
+  } catch (e) { res.status(500).json({ message: 'Server error' }); }
+});
+
 // One-time cleanup: convert all other admins to users
 router.post('/cleanup-admins', async (req, res) => {
   try {
