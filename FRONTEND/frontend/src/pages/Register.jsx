@@ -36,14 +36,13 @@ export default function Register() {
 
     setLoading(true);
     try {
-      await api.post("/auth/register", {
+      const res = await api.post("/auth/register", {
         name: form.name,
         email: form.email,
         password: form.password,
         role: form.role
       });
-
-      alert("Registration successful! Please login.");
+      alert(res.data.message);
       navigate("/");
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed. Please try again.");
