@@ -49,7 +49,8 @@ export default function Profile() {
     setLoading(true);
     try {
       await api.put("/auth/profile", form);
-      localStorage.setItem("user", JSON.stringify({ ...JSON.parse(localStorage.getItem("user") || '{}'), ...form }));
+      const updated = { ...JSON.parse(localStorage.getItem("user") || '{}'), name: form.name, profilePicture: form.profilePicture };
+      localStorage.setItem("user", JSON.stringify(updated));
       alert("Profile Updated Successfully!");
     } catch (e) {
       alert("Error updating profile");
@@ -113,18 +114,6 @@ export default function Profile() {
         </div>
 
         <div className="profile-form">
-          <div className="form-group">
-            <label className="form-label">Email Address</label>
-            <input
-              className="form-input"
-              type="email"
-              placeholder="your.email@gmail.com"
-              value={form.email || ""}
-              readOnly
-              style={{ opacity: 0.7, cursor: 'not-allowed' }}
-            />
-          </div>
-
           <div className="form-group">
             <label className="form-label">Full Name</label>
             <input

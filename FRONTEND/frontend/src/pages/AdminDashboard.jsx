@@ -39,7 +39,10 @@ export default function AdminDashboard() {
       setStats(await statsRes.json());
       setTrendData(await trendsRes.json());
       setNotifications((await notifRes.json()).pendingCount);
-      setAdmin(JSON.parse(localStorage.getItem('user')));
+      const profileRes = await fetch(`${API}/api/auth/profile`, { headers });
+      const profileData = await profileRes.json();
+      setAdmin(profileData);
+      localStorage.setItem('user', JSON.stringify(profileData));
     } catch (e) { console.error(e); }
   };
 
