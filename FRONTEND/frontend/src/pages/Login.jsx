@@ -40,7 +40,7 @@ export default function Login() {
         navigate("/home");
       }
     } catch (err) {
-      setError("Invalid credentials. Please check your email and password.");
+      setError(err.response?.data?.message || "Invalid credentials. Please check your email and password.");
     }
     setLoading(false);
   };

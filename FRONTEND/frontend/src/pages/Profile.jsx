@@ -27,9 +27,7 @@ export default function Profile() {
     try {
       const res = await api.get("/auth/profile");
       setForm(res.data);
-      if (res.data.picture) {
-        setImagePreview(res.data.picture);
-      }
+      if (res.data.profilePicture) setImagePreview(res.data.profilePicture);
     } catch (e) {
       console.log("Profile not found");
     }
@@ -41,7 +39,7 @@ export default function Profile() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
-        setForm({ ...form, picture: reader.result });
+        setForm({ ...form, profilePicture: reader.result });
       };
       reader.readAsDataURL(file);
     }
@@ -51,6 +49,7 @@ export default function Profile() {
     setLoading(true);
     try {
       await api.put("/auth/profile", form);
+      localStorage.setItem("user", JSON.stringify({ ...JSON.parse(localStorage.getItem("user") || '{}'), ...form }));
       alert("Profile Updated Successfully!");
     } catch (e) {
       alert("Error updating profile");
