@@ -25,15 +25,16 @@ router.post('/register', loginLimiter, async (req, res) => {
     const hashed = await bcrypt.hash(password, 10);
     // giriraja.ec23@bitsathy.ac.in is always admin and auto-approved
     const assignedRole = (email === SUPER_ADMIN) ? 'admin' : (role === 'admin' ? 'admin' : 'user');
-    const status = (email === SUPER_ADMIN) ? 'approved' : 'pending';
+    const status = (email === SUPER_ADMIN || assignedRole === 'user') ? 'approved' : 'pending';
     await User.create({ name, email, password: hashed, role: assignedRole, status });
-    // Notify super admin for all new registrations
     if (email !== SUPER_ADMIN) {
-      sendMail(SUPER_ADMIN, '🔔 New Registration Request',
-        `<h2>New ${assignedRole} registration</h2><p><b>Name:</b> ${name}</p><p><b>Email:</b> ${email}</p><p><b>Role Requested:</b> ${assignedRole}</p><p>Login to admin panel to approve or reject.</p><a href="${process.env.FRONTEND_URL}" style="background:#8b5cf6;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;">Go to Dashboard</a>`
-      );
+      if (assignedRole === 'admin') {
+        sendMail(SUPER_ADMIN, '🔔 New Admin Registration Request',
+          `<h2>New Admin Registration</h2><p><b>Name:</b> ${name}</p><p><b>Email:</b> ${email}</p><p>Login to admin panel to approve or reject.</p><a href="${process.env.FRONTEND_URL}" style="background:#8b5cf6;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;">Go to Dashboard</a>`
+        );
+      }
     }
-    res.json({ message: email === SUPER_ADMIN ? 'Admin account created!' : `Registration successful! Your ${assignedRole} account is pending approval.` });
+    res.json({ message: email === SUPER_ADMIN ? 'Admin account created!' : assignedRole === 'admin' ? 'Admin registration successful! Pending approval from super admin.' : 'Registration successful! You can now login.' });
   } catch (e) {
     res.status(500).json({ message: 'Server error' });
   }
