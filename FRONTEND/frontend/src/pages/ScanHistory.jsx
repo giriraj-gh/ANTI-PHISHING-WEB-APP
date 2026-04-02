@@ -30,6 +30,10 @@ export default function ScanHistory() {
   const getRiskColor = (risk) => risk === 'HIGH' ? '#dc2626' : risk === 'MEDIUM' ? '#f59e0b' : '#10b981';
   const getRiskIcon = (risk) => risk === 'HIGH' ? '🚨' : risk === 'MEDIUM' ? '⚠️' : '✅';
 
+  const highCount = history.filter(h => h.risk === 'HIGH').length;
+  const mediumCount = history.filter(h => h.risk === 'MEDIUM').length;
+  const lowCount = history.filter(h => h.risk === 'LOW').length;
+
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#1e1b4b,#312e81,#1e1b4b)', color: 'white', padding: '2rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
@@ -43,6 +47,23 @@ export default function ScanHistory() {
         <span style={{ background: 'rgba(139,92,246,0.3)', padding: '0.25rem 0.75rem', borderRadius: '20px', fontSize: '0.9rem' }}>
           {filtered.length} records
         </span>
+      </div>
+
+      {/* Count Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+        {[
+          { label: 'Total', count: history.length, color: '#8b5cf6', icon: '📋' },
+          { label: 'High Risk', count: highCount, color: '#dc2626', icon: '🚨' },
+          { label: 'Medium Risk', count: mediumCount, color: '#f59e0b', icon: '⚠️' },
+          { label: 'Low Risk', count: lowCount, color: '#10b981', icon: '✅' }
+        ].map(c => (
+          <div key={c.label} onClick={() => setFilter(c.label === 'Total' ? 'ALL' : c.label.split(' ')[0].toUpperCase())}
+            style={{ background: 'rgba(31,41,55,0.8)', padding: '1rem', borderRadius: '12px', border: `2px solid ${filter === (c.label === 'Total' ? 'ALL' : c.label.split(' ')[0].toUpperCase()) ? c.color : 'transparent'}`, borderLeft: `4px solid ${c.color}`, cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s' }}>
+            <div style={{ fontSize: '1.5rem' }}>{c.icon}</div>
+            <div style={{ fontSize: '1.8rem', fontWeight: 700, color: c.color }}>{c.count}</div>
+            <div style={{ fontSize: '0.85rem', opacity: 0.8 }}>{c.label}</div>
+          </div>
+        ))}
       </div>
 
       {/* Filters */}
