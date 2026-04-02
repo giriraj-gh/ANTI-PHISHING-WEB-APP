@@ -87,6 +87,7 @@ export default function Home() {
           </div>
         </div>
         <div className="header-actions">
+          <button onClick={() => nav("/scan-history")} className="btn-report">📋 History</button>
           <button onClick={() => nav("/profile")} className="btn-profile">Profile</button>
           <button onClick={() => nav("/report")} className="btn-report">Report</button>
           <button onClick={() => { 

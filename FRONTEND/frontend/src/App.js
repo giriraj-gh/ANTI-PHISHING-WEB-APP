@@ -15,6 +15,9 @@ import ManageLessons from './pages/ManageLessons';
 import ManageQuiz from './pages/ManageQuiz';
 import AdminRoute from './components/AdminRoute';
 import UserRoute from './components/UserRoute';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import ScanHistory from './pages/ScanHistory';
 
 function App() {
   return (
@@ -24,6 +27,10 @@ function App() {
         <Route path="/guest" element={<GuestHome />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/admin/scan-history" element={<AdminRoute><ScanHistory /></AdminRoute>} />
+        <Route path="/scan-history" element={<UserRoute><ScanHistory /></UserRoute>} />
         <Route path="/lessons" element={<Lessons />} />
         <Route path="/quiz" element={<Quiz />} />
         <Route path="/home" element={<UserRoute><Home /></UserRoute>} />

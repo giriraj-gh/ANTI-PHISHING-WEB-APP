@@ -186,8 +186,8 @@ export default function Login() {
               <Link to="/register" className="register-link">
                 Don't have an account? <strong>Sign Up</strong>
               </Link>
-              <Link to="/guest" className="guest-link">
-                Continue as Guest
+              <Link to="/forgot-password" className="forgot-link">
+                Forgot Password?
               </Link>
             </div>
           </form>

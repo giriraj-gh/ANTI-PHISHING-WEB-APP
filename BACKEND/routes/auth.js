@@ -1,19 +1,32 @@
 const router = require('express').Router();
 const auth = require('../middleware/auth');
 const rateLimit = require('express-rate-limit');
+const nodemailer = require('nodemailer');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const User = require('../models/User');
 
 const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
 
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+});
+
+const sendMail = (to, subject, html) => transporter.sendMail({ from: process.env.EMAIL_USER, to, subject, html }).catch(console.error);
+
 router.post('/register', loginLimiter, async (req, res) => {
-  const bcrypt = require('bcryptjs');
-  const User = require('../models/User');
   try {
     const { name, email, password, role } = req.body;
     const exists = await User.findOne({ email });
     if (exists) return res.status(400).json({ message: 'Email already registered.' });
     const hashed = await bcrypt.hash(password, 10);
-    const status = role === 'admin' ? 'pending' : 'pending';
-    await User.create({ name, email, password: hashed, role, status });
+    await User.create({ name, email, password: hashed, role, status: 'pending' });
+    // Notify all admins
+    const admins = await User.find({ role: 'admin', status: 'approved' }).select('email');
+    admins.forEach(admin => sendMail(admin.email, '🔔 New User Registration',
+      `<h2>New ${role} registration</h2><p><b>Name:</b> ${name}</p><p><b>Email:</b> ${email}</p><p>Login to admin panel to approve or reject.</p>`
+    ));
     res.json({ message: 'Registration successful! Please wait for admin approval.' });
   } catch (e) {
     res.status(500).json({ message: 'Server error' });
@@ -21,9 +34,6 @@ router.post('/register', loginLimiter, async (req, res) => {
 });
 
 router.post('/login', loginLimiter, async (req, res) => {
-  const bcrypt = require('bcryptjs');
-  const jwt = require('jsonwebtoken');
-  const User = require('../models/User');
   try {
     const { email, password, role } = req.body;
     const user = await User.findOne({ email, role });
@@ -39,8 +49,33 @@ router.post('/login', loginLimiter, async (req, res) => {
   }
 });
 
+router.post('/forgot', async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ message: 'Email not found.' });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${token}`;
+    await sendMail(email, '🔐 Reset Your Password',
+      `<h2>Password Reset</h2><p>Click the link below to reset your password. This link expires in 1 hour.</p><a href="${resetUrl}" style="background:#8b5cf6;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;">Reset Password</a>`);
+    res.json({ message: 'Reset link sent to your email.' });
+  } catch (e) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.post('/reset/:token', async (req, res) => {
+  try {
+    const { id } = jwt.verify(req.params.token, process.env.JWT_SECRET);
+    const hashed = await bcrypt.hash(req.body.password, 10);
+    await User.findByIdAndUpdate(id, { password: hashed });
+    res.json({ message: 'Password updated successfully.' });
+  } catch (e) {
+    res.status(400).json({ message: 'Invalid or expired reset link.' });
+  }
+});
+
 router.get('/profile', auth, async (req, res) => {
-  const User = require('../models/User');
   try {
     const user = await User.findById(req.user.id).select('-password');
     res.json(user);
@@ -50,7 +85,6 @@ router.get('/profile', auth, async (req, res) => {
 });
 
 router.put('/profile', auth, async (req, res) => {
-  const User = require('../models/User');
   try {
     await User.findByIdAndUpdate(req.user.id, req.body);
     res.json({ message: 'Profile updated' });
