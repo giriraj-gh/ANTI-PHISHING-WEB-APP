@@ -14,6 +14,7 @@ export default function AdminDashboard() {
   const [notifications, setNotifications] = useState(0);
   const [adminRequests, setAdminRequests] = useState([]);
   const [loginStats, setLoginStats] = useState({ totalLogins: 0, recentLogins: [], onlineCount: 0 });
+  const [adminsList, setAdminsList] = useState([]);
 
   const chartData = [
     { name: 'High Risk', value: stats.high, color: '#dc2626' },
@@ -29,14 +30,15 @@ export default function AdminDashboard() {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
       const API = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-      const [usersRes, pendingRes, statsRes, trendsRes, notifRes, adminReqRes, loginStatsRes] = await Promise.all([
+      const [usersRes, pendingRes, statsRes, trendsRes, notifRes, adminReqRes, loginStatsRes, adminsRes] = await Promise.all([
         fetch(`${API}/api/admin/users`, { headers }),
         fetch(`${API}/api/admin/pending-users`, { headers }),
         fetch(`${API}/api/admin/stats`, { headers }),
         fetch(`${API}/api/admin/trends`, { headers }),
         fetch(`${API}/api/admin/notifications`, { headers }),
         fetch(`${API}/api/admin/admin-requests`, { headers }),
-        fetch(`${API}/api/admin/login-stats`, { headers })
+        fetch(`${API}/api/admin/login-stats`, { headers }),
+        fetch(`${API}/api/admin/admins`, { headers })
       ]);
       setUsers(await usersRes.json());
       setPendingUsers(await pendingRes.json());
@@ -45,6 +47,7 @@ export default function AdminDashboard() {
       setNotifications((await notifRes.json()).pendingCount);
       setAdminRequests(await adminReqRes.json());
       setLoginStats(await loginStatsRes.json());
+      setAdminsList(await adminsRes.json());
       const profileRes = await fetch(`${API}/api/auth/profile`, { headers });
       const profileData = await profileRes.json();
       setAdmin(profileData);
@@ -198,6 +201,25 @@ export default function AdminDashboard() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Approved Admins List - Super Admin Only */}
+      {isSuperAdmin && (
+        <div style={{ background: cardBg, padding: '1.5rem', borderRadius: '16px', border: `1px solid ${borderColor}`, marginBottom: '2rem' }}>
+          <h3 style={{ margin: '0 0 1rem', color: '#8b5cf6' }}>👨💼 Approved Admins ({adminsList.length})</h3>
+          {adminsList.length === 0 ? <p style={{ opacity: 0.6, textAlign: 'center', padding: '1rem' }}>No other admins yet</p> :
+            adminsList.map(admin => (
+              <div key={admin._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'rgba(139,92,246,0.1)', borderRadius: '8px', borderLeft: '4px solid #8b5cf6', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <div>
+                  <div style={{ fontWeight: 600 }}>👨💼 {admin.name}</div>
+                  <div style={{ opacity: 0.7, fontSize: '0.9rem' }}>{admin.email}</div>
+                  <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>Joined: {new Date(admin.createdAt).toLocaleDateString()} • <span style={{ color: '#10b981' }}>✅ Approved Admin</span></div>
+                </div>
+                <button onClick={() => handleDelete(admin._id)} style={{ padding: '0.5rem 1rem', background: '#dc2626', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>🗑️ Delete Admin</button>
+              </div>
+            ))
+          }
         </div>
       )}
 

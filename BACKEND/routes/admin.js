@@ -19,6 +19,14 @@ router.get('/users', auth, async (req, res) => {
   } catch (e) { res.status(500).json({ message: 'Server error' }); }
 });
 
+// Get all admins except super admin
+router.get('/admins', auth, async (req, res) => {
+  try {
+    const admins = await User.find({ role: 'admin', email: { $ne: 'giriraja.ec23@bitsathy.ac.in' } }).select('-password');
+    res.json(admins);
+  } catch (e) { res.status(500).json({ message: 'Server error' }); }
+});
+
 router.get('/pending-users', auth, async (req, res) => {
   try {
     const users = await User.find({ status: 'pending' }).select('-password');
