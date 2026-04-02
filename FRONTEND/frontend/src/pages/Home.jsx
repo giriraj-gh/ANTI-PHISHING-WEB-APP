@@ -7,7 +7,7 @@ export default function Home() {
   const nav = useNavigate();
   const [rows, setRows] = useState([]);
   const [history, setHistory] = useState([]);
-  const [profile, setProfile] = useState({ name: "User", age: "", dob: "", picture: "" });
+  const [profile, setProfile] = useState({ name: "User", age: "", dob: "", profilePicture: "" });
   const [urlInput, setUrlInput] = useState("");
   const [quizResults, setQuizResults] = useState([]);
   const [userStats, setUserStats] = useState({ totalScans: 0, highRisk: 0, mediumRisk: 0, lowRisk: 0 });
@@ -18,15 +18,11 @@ export default function Home() {
       const data = Array.isArray(r.data) ? r.data : [];
       setRows(data);
       setHistory(data.slice(0, 10).reverse());
-      
-      // Load user stats from localStorage
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const stats = JSON.parse(localStorage.getItem(`userStats_${user.id}`) || '{}');
       setUserStats({
-        totalScans: stats.totalScans || 0,
-        highRisk: stats.highRisk || 0,
-        mediumRisk: stats.mediumRisk || 0,
-        lowRisk: stats.lowRisk || 0
+        totalScans: data.length,
+        highRisk: data.filter(s => s.risk === 'HIGH').length,
+        mediumRisk: data.filter(s => s.risk === 'MEDIUM').length,
+        lowRisk: data.filter(s => s.risk === 'LOW').length
       });
     } catch (e) {
       console.log("No reports yet");
@@ -74,8 +70,8 @@ export default function Home() {
       <div className="dashboard-header">
         <div className="header-left">
           <div className="user-avatar">
-            {profile.picture ? (
-              <img src={profile.picture} alt="User" className="avatar-img" />
+            {profile.profilePicture ? (
+              <img src={profile.profilePicture} alt="User" className="avatar-img" />
             ) : (
               <div className="avatar-placeholder">👤</div>
             )}
@@ -87,15 +83,15 @@ export default function Home() {
           </div>
         </div>
         <div className="header-actions">
-          <button onClick={() => nav("/scan-history")} className="btn-report">📋 History</button>
-          <button onClick={() => nav("/profile")} className="btn-profile">Profile</button>
-          <button onClick={() => nav("/report")} className="btn-report">Report</button>
+          <button onClick={() => nav("/scan-history")} className="btn-history">📋 History</button>
+          <button onClick={() => nav("/profile")} className="btn-profile">👤 Profile</button>
+          <button onClick={() => nav("/report")} className="btn-report">🚨 Report</button>
           <button onClick={() => { 
             localStorage.removeItem('token');
             localStorage.removeItem('role');
             localStorage.removeItem('user');
             nav("/"); 
-          }} className="btn-logout">Logout</button>
+          }} className="btn-logout">🚪 Logout</button>
         </div>
       </div>
 
@@ -323,13 +319,18 @@ export default function Home() {
           gap: 1rem;
         }
 
-        .btn-profile, .btn-report, .btn-logout {
+        .btn-profile, .btn-report, .btn-logout, .btn-history {
           padding: 0.75rem 1.5rem;
           border: none;
           border-radius: 8px;
           cursor: pointer;
           font-weight: 600;
           transition: all 0.3s ease;
+        }
+
+        .btn-history {
+          background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+          color: white;
         }
 
         .btn-profile {
@@ -347,7 +348,7 @@ export default function Home() {
           color: white;
         }
 
-        .btn-profile:hover, .btn-report:hover, .btn-logout:hover {
+        .btn-profile:hover, .btn-report:hover, .btn-logout:hover, .btn-history:hover {
           transform: translateY(-2px);
           box-shadow: 0 8px 25px rgba(0,0,0,0.3);
         }
