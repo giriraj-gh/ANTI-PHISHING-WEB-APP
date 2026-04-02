@@ -73,6 +73,8 @@ router.put('/bulk-action', auth, async (req, res) => {
 // Delete user
 router.delete('/delete-user/:id', auth, async (req, res) => {
   try {
+    const userToDelete = await User.findById(req.params.id);
+    if (userToDelete.email === SUPER_ADMIN) return res.status(403).json({ message: 'Cannot delete the super admin.' });
     await User.findByIdAndDelete(req.params.id);
     await ScanLog.deleteMany({ userId: req.params.id });
     res.json({ message: 'User deleted' });

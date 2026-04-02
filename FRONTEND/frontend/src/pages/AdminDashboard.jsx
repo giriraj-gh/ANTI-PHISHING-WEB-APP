@@ -193,7 +193,8 @@ export default function AdminDashboard() {
               </div>
               <div style={{ display: 'flex', gap: '0.75rem' }}>
                 <button onClick={() => handleAdminRequest(user._id, 'approve')} style={{ padding: '0.5rem 1.25rem', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>✅ Approve Admin</button>
-                <button onClick={() => handleAdminRequest(user._id, 'reject')} style={{ padding: '0.5rem 1.25rem', background: '#dc2626', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>❌ Reject</button>
+                <button onClick={() => handleAdminRequest(user._id, 'reject')} style={{ padding: '0.5rem 1.25rem', background: '#f59e0b', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>❌ Reject</button>
+                <button onClick={() => handleDelete(user._id)} style={{ padding: '0.5rem 1.25rem', background: '#dc2626', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>🗑️ Delete</button>
               </div>
             </div>
           ))}
@@ -270,7 +271,12 @@ export default function AdminDashboard() {
                 <div style={{ opacity: 0.7, fontSize: '0.9rem' }}>{user.email}</div>
                 <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>Joined: {new Date(user.createdAt).toLocaleDateString()} • Status: <span style={{ color: user.status === 'approved' ? '#10b981' : '#f59e0b' }}>{user.status}</span></div>
               </div>
-              <button onClick={() => handleDelete(user._id)} style={{ padding: '0.5rem 1rem', background: '#dc2626', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>🗑️ Delete</button>
+              {user.email !== 'giriraja.ec23@bitsathy.ac.in' && (
+                <button onClick={() => handleDelete(user._id)} style={{ padding: '0.5rem 1rem', background: '#dc2626', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>🗑️ Delete</button>
+              )}
+              {user.email === 'giriraja.ec23@bitsathy.ac.in' && (
+                <span style={{ padding: '0.5rem 1rem', background: 'rgba(139,92,246,0.3)', color: '#a78bfa', borderRadius: '8px', fontWeight: 600, fontSize: '0.85rem' }}>👑 Permanent Admin</span>
+              )}
             </div>
           ))
         }
