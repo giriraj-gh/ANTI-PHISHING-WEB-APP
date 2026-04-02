@@ -188,11 +188,9 @@ export default function Quiz() {
 function Leaderboard({ quizTitle, currentUser }) {
   const [board, setBoard] = React.useState([]);
   React.useEffect(() => {
-    import('../api').then(({ default: api }) => {
-      api.get(`/results/leaderboard/${encodeURIComponent(quizTitle)}`)
-        .then(res => setBoard(Array.isArray(res.data) ? res.data : []))
-        .catch(() => {});
-    });
+    api.get(`/results/leaderboard/${encodeURIComponent(quizTitle)}`)
+      .then(res => setBoard(Array.isArray(res.data) ? res.data : []))
+      .catch(() => {});
   }, [quizTitle]);
   if (board.length === 0) return null;
   const medals = ['🥇', '🥈', '🥉'];

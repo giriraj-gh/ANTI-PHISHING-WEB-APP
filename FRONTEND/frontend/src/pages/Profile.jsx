@@ -9,9 +9,7 @@ export default function Profile() {
     email: "",
     dob: "", 
     age: "", 
-    picture: "",
-    phone: "",
-    address: "",
+    profilePicture: "",
     bio: ""
   });
   const [imagePreview, setImagePreview] = useState("");
@@ -180,21 +178,21 @@ export default function Profile() {
           <div className="stat-icon">📅</div>
           <div className="stat-content">
             <h4>Member Since</h4>
-            <p>January 2024</p>
+            <p>{form.createdAt ? new Date(form.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'N/A'}</p>
           </div>
         </div>
         <div className="stat-item">
           <div className="stat-icon">{isAdmin ? "🔧" : "🔍"}</div>
           <div className="stat-content">
-            <h4>{isAdmin ? "System Access" : "Scans Performed"}</h4>
-            <p>{isAdmin ? "Full Access" : "25 Scans"}</p>
+            <h4>{isAdmin ? "System Access" : "Role"}</h4>
+            <p>{isAdmin ? "Full Access" : "User"}</p>
           </div>
         </div>
         <div className="stat-item">
-          <div className="stat-icon">🏆</div>
+          <div className="stat-icon">📧</div>
           <div className="stat-content">
-            <h4>Security Level</h4>
-            <p>{isAdmin ? "Maximum" : "High"}</p>
+            <h4>Email</h4>
+            <p style={{ fontSize: '0.9rem', wordBreak: 'break-all' }}>{form.email || 'N/A'}</p>
           </div>
         </div>
       </div>
