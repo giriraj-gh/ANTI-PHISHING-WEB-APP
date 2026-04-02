@@ -38,9 +38,11 @@ export default function Home() {
     }
   };
 
-  const loadQuizResults = () => {
-    const results = JSON.parse(localStorage.getItem('quizResults') || '[]');
-    setQuizResults(results.slice(-5).reverse());
+  const loadQuizResults = async () => {
+    try {
+      const res = await api.get('/results/all');
+      setQuizResults(Array.isArray(res.data) ? res.data.slice(0, 5) : []);
+    } catch (e) { console.log('No quiz results'); }
   };
 
   const quickScan = async () => {
@@ -228,11 +230,11 @@ export default function Home() {
               <div key={idx} className="result-item">
                 <div className="result-info">
                   <h4>{result.quizTitle}</h4>
-                  <span className="result-date">{new Date(result.date).toLocaleDateString()}</span>
+                  <span className="result-date">{new Date(result.createdAt).toLocaleDateString()}</span>
                 </div>
                 <div className="result-score">
                   <div className={`score-badge ${result.passed ? 'passed' : 'failed'}`}>
-                    {result.percentage.toFixed(0)}%
+                    {result.percentage?.toFixed(0)}%
                   </div>
                   <span className={`status ${result.passed ? 'passed' : 'failed'}`}>
                     {result.passed ? '✅ PASSED' : '❌ FAILED'}

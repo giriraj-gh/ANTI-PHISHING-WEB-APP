@@ -32,19 +32,14 @@ export default function Scan() {
   };
 
   const scan = async () => {
-    if (!url.trim()) {
-      alert("Please enter a URL to scan");
-      return;
-    }
-
+    if (!url.trim()) { alert('Please enter a URL to scan'); return; }
     setLoading(true);
     try {
-      const res = await api.post("/phish/check", { url: url.trim() });
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const res = await api.post('/phish/check', { url: url.trim(), userName: user.name, userEmail: user.email });
       setResult(res.data);
-      loadHistory(); // Refresh history
-    } catch (e) {
-      alert("Error scanning URL. Please try again.");
-    }
+      loadHistory();
+    } catch (e) { alert('Error scanning URL. Please try again.'); }
     setLoading(false);
   };
 

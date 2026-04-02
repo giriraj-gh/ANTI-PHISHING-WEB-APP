@@ -69,19 +69,18 @@ export default function Quiz() {
     setShowResult(true);
 
     if (!isGuest) {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
       const result = {
-        quizId: currentQuiz.id,
         quizTitle: currentQuiz.title,
+        userName: user.name,
         score: correct,
         total: totalQuestions,
         percentage: percentage,
-        passed: isPassed,
-        date: new Date().toISOString()
+        passed: isPassed
       };
-      
-      const quizResults = JSON.parse(localStorage.getItem('quizResults') || '[]');
-      quizResults.push(result);
-      localStorage.setItem('quizResults', JSON.stringify(quizResults));
+      try {
+        await api.post('/results/save', result);
+      } catch (e) { console.log('Error saving result'); }
     }
   };
 
