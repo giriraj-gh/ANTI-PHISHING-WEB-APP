@@ -22,4 +22,16 @@ router.get('/all', auth, async (req, res) => {
   }
 });
 
+// Get leaderboard/ranking for a quiz
+router.get('/leaderboard/:quizTitle', auth, async (req, res) => {
+  const QuizResult = require('../models/QuizResult');
+  try {
+    const title = decodeURIComponent(req.params.quizTitle);
+    const results = await QuizResult.find({ quizTitle: title }).sort({ score: -1, createdAt: 1 }).limit(10);
+    res.json(results);
+  } catch (e) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;

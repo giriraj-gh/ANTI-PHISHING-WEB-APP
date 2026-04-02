@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 
@@ -39,13 +39,14 @@ export default function Quiz() {
     if (qIdx < quiz.questions.length - 1) {
       setQIdx(i => i + 1); setSelected(null); setAnswered(false);
     } else {
+      const total = quiz.questions.length;
+      const finalScore = score + (selected === quiz.questions[qIdx].correctAnswer ? 1 : 0);
+      const pct = Math.round((finalScore / total) * 100);
+      setScore(finalScore);
       setDone(true);
       if (!isGuest) {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        const total = quiz.questions.length;
-        const finalScore = score + (selected === quiz.questions[qIdx].correctAnswer ? 0 : 0);
-        const pct = (score / total) * 100;
-        try { await api.post('/results/save', { quizTitle: quiz.title, userName: user.name, score, total, percentage: pct, passed: pct >= 80 }); }
+        try { await api.post('/results/save', { quizTitle: quiz.title, userName: user.name, score: finalScore, total, percentage: pct, passed: pct >= 80 }); }
         catch (e) {}
       }
     }
@@ -66,22 +67,26 @@ export default function Quiz() {
     const pct = Math.round((score / total) * 100);
     const passed = pct >= 80;
     return (
-      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#0f172a,#1e293b)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
-        <div style={{ background: 'rgba(31,41,55,0.9)', padding: '3rem', borderRadius: '20px', textAlign: 'center', color: 'white', maxWidth: 600, width: '100%' }}>
-          <div style={{ fontSize: '5rem' }}>{passed ? '🎉' : '😔'}</div>
-          <h2>{passed ? 'Congratulations! You Passed!' : 'Keep Learning!'}</h2>
-          <div style={{ width: 160, height: 160, borderRadius: '50%', background: passed ? 'linear-gradient(45deg,#10b981,#059669)' : 'linear-gradient(45deg,#dc2626,#b91c1c)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '1.5rem auto', border: `8px solid ${passed ? '#34d399' : '#f87171'}` }}>
-            <span style={{ fontSize: '3rem', fontWeight: 700 }}>{pct}%</span>
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#0f172a,#1e293b)', padding: '2rem' }}>
+        <div style={{ maxWidth: 700, margin: '0 auto' }}>
+          <div style={{ background: 'rgba(31,41,55,0.9)', padding: '3rem', borderRadius: '20px', textAlign: 'center', color: 'white', marginBottom: '1.5rem' }}>
+            <div style={{ fontSize: '5rem' }}>{passed ? '🎉' : '😔'}</div>
+            <h2>{passed ? 'Congratulations! You Passed!' : 'Keep Learning!'}</h2>
+            <div style={{ width: 160, height: 160, borderRadius: '50%', background: passed ? 'linear-gradient(45deg,#10b981,#059669)' : 'linear-gradient(45deg,#dc2626,#b91c1c)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '1.5rem auto', border: `8px solid ${passed ? '#34d399' : '#f87171'}` }}>
+              <span style={{ fontSize: '3rem', fontWeight: 700 }}>{pct}%</span>
+            </div>
+            <p style={{ fontSize: '1.2rem' }}>You scored {score} out of {total}</p>
+            <div style={{ padding: '1rem', borderRadius: '8px', fontWeight: 700, background: passed ? 'rgba(16,185,129,0.2)' : 'rgba(220,38,38,0.2)', color: passed ? '#10b981' : '#dc2626', border: `2px solid ${passed ? '#10b981' : '#dc2626'}`, margin: '1rem 0 2rem' }}>
+              {passed ? '✅ PASSED - Minimum 80% Required' : '❌ FAILED - Minimum 80% Required'}
+            </div>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+              <button onClick={() => { setQuiz(null); setDone(false); }} style={{ flex: 1, padding: '1rem', background: 'linear-gradient(45deg,#3b82f6,#1d4ed8)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>Back to Quizzes</button>
+              <button onClick={() => nav("/lessons")} style={{ flex: 1, padding: '1rem', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>Review Lessons</button>
+              {!isGuest && <button onClick={() => nav(isAdmin ? "/admin" : "/home")} style={{ flex: 1, padding: '1rem', background: 'linear-gradient(45deg,#10b981,#059669)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>Dashboard</button>}
+            </div>
           </div>
-          <p style={{ fontSize: '1.2rem' }}>You scored {score} out of {total}</p>
-          <div style={{ padding: '1rem', borderRadius: '8px', fontWeight: 700, background: passed ? 'rgba(16,185,129,0.2)' : 'rgba(220,38,38,0.2)', color: passed ? '#10b981' : '#dc2626', border: `2px solid ${passed ? '#10b981' : '#dc2626'}`, margin: '1rem 0 2rem' }}>
-            {passed ? '✅ PASSED - Minimum 80% Required' : '❌ FAILED - Minimum 80% Required'}
-          </div>
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-            <button onClick={() => { setQuiz(null); setDone(false); }} style={{ flex: 1, padding: '1rem', background: 'linear-gradient(45deg,#3b82f6,#1d4ed8)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>Back to Quizzes</button>
-            <button onClick={() => nav("/lessons")} style={{ flex: 1, padding: '1rem', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>Review Lessons</button>
-            {!isGuest && <button onClick={() => nav(isAdmin ? "/admin" : "/home")} style={{ flex: 1, padding: '1rem', background: 'linear-gradient(45deg,#10b981,#059669)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>Dashboard</button>}
-          </div>
+          {/* Leaderboard */}
+          {!isGuest && <Leaderboard quizTitle={quiz.title} currentUser={JSON.parse(localStorage.getItem('user') || '{}')} />}
         </div>
       </div>
     );
@@ -176,6 +181,32 @@ export default function Quiz() {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+function Leaderboard({ quizTitle, currentUser }) {
+  const [board, setBoard] = React.useState([]);
+  React.useEffect(() => {
+    import('../api').then(({ default: api }) => {
+      api.get(`/results/leaderboard/${encodeURIComponent(quizTitle)}`)
+        .then(res => setBoard(Array.isArray(res.data) ? res.data : []))
+        .catch(() => {});
+    });
+  }, [quizTitle]);
+  if (board.length === 0) return null;
+  const medals = ['🥇', '🥈', '🥉'];
+  return (
+    <div style={{ background: 'rgba(31,41,55,0.9)', padding: '1.5rem', borderRadius: '20px', color: 'white', border: '1px solid rgba(139,92,246,0.2)' }}>
+      <h3 style={{ margin: '0 0 1rem', color: '#f59e0b', textAlign: 'center' }}>🏆 Leaderboard - {quizTitle}</h3>
+      {board.map((r, i) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem 1rem', background: r.userName === currentUser?.name ? 'rgba(139,92,246,0.2)' : 'rgba(255,255,255,0.05)', borderRadius: '8px', marginBottom: '0.5rem', border: r.userName === currentUser?.name ? '1px solid #8b5cf6' : '1px solid transparent' }}>
+          <span style={{ fontSize: '1.5rem', width: 36, textAlign: 'center' }}>{medals[i] || `#${i + 1}`}</span>
+          <span style={{ flex: 1, fontWeight: r.userName === currentUser?.name ? 700 : 400 }}>{r.userName} {r.userName === currentUser?.name ? '(You)' : ''}</span>
+          <span style={{ color: '#10b981', fontWeight: 700 }}>{r.score}/{r.total}</span>
+          <span style={{ background: r.passed ? 'rgba(16,185,129,0.2)' : 'rgba(220,38,38,0.2)', color: r.passed ? '#10b981' : '#dc2626', padding: '0.2rem 0.6rem', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600 }}>{Math.round(r.percentage)}%</span>
+        </div>
+      ))}
     </div>
   );
 }

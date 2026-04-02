@@ -33,7 +33,7 @@ export default function Lessons() {
           <span style={{ background: 'rgba(139,92,246,0.2)', padding: '0.25rem 0.75rem', borderRadius: '8px', fontSize: '0.85rem' }}>⏱️ {selected.duration}</span>
         </div>
         <div style={{ lineHeight: 1.9, fontSize: '1.05rem' }} dangerouslySetInnerHTML={{ __html: selected.content || '<p>Content coming soon...</p>' }} />
-        <button onClick={() => nav("/quiz")} style={{ width: '100%', padding: '1rem', background: 'linear-gradient(45deg,#10b981,#059669)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, fontSize: '1.1rem', cursor: 'pointer', marginTop: '2rem' }}>📝 Take Quiz →</button>
+        <button onClick={() => nav("/quiz")} style={{ width: '100%', padding: '1rem', background: 'linear-gradient(45deg,#10b981,#059669)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, fontSize: '1.1rem', cursor: 'pointer', marginTop: '2rem' }}>📝 Take Quiz on "{selected.title}" →</button>
       </div>
     </div>
   );
