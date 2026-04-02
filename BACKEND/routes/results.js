@@ -15,7 +15,7 @@ router.get('/all', auth, async (req, res) => {
   const QuizResult = require('../models/QuizResult');
   try {
     const filter = req.user.role === 'admin' ? {} : { userId: req.user.id };
-    const results = await QuizResult.find(filter).sort({ createdAt: -1 });
+    const results = await QuizResult.find(filter).sort({ createdAt: -1 }).limit(20);
     res.json(results);
   } catch (e) {
     res.status(500).json({ message: 'Server error' });
