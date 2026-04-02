@@ -4,110 +4,43 @@ const ScanLog = require('../models/ScanLog');
 const auth = require('../middleware/auth');
 const nodemailer = require('nodemailer');
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
-});
+const transporter = nodemailer.createTransport({ service: 'gmail', auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS } });
 const sendMail = (to, subject, html) => transporter.sendMail({ from: process.env.EMAIL_USER, to, subject, html }).catch(console.error);
-
 const SUPER_ADMIN = 'giriraja.ec23@bitsathy.ac.in';
 
 router.get('/users', auth, async (req, res) => {
-  try {
-    const users = await User.find({ role: 'user' }).select('-password');
-    res.json(users);
-  } catch (e) { res.status(500).json({ message: 'Server error' }); }
+  try { res.json(await User.find({ role: 'user' }).select('-password')); }
+  catch (e) { res.status(500).json({ message: 'Server error' }); }
 });
 
-// Get all admins except super admin
 router.get('/admins', auth, async (req, res) => {
-  try {
-    const admins = await User.find({ role: 'admin', email: { $ne: 'giriraja.ec23@bitsathy.ac.in' } }).select('-password');
-    res.json(admins);
-  } catch (e) { res.status(500).json({ message: 'Server error' }); }
+  try { res.json(await User.find({ role: 'admin', email: { $ne: SUPER_ADMIN }, status: 'approved' }).select('-password')); }
+  catch (e) { res.status(500).json({ message: 'Server error' }); }
 });
 
 router.get('/pending-users', auth, async (req, res) => {
-  try {
-    const users = await User.find({ status: 'pending' }).select('-password');
-    res.json(users);
-  } catch (e) { res.status(500).json({ message: 'Server error' }); }
-});
-
-router.put('/approve-user/:id', auth, async (req, res) => {
-  try {
-    const admin = await User.findById(req.user.id);
-    if (admin.email !== SUPER_ADMIN) return res.status(403).json({ message: 'Not authorized.' });
-    const user = await User.findByIdAndUpdate(req.params.id, { status: 'approved' }, { new: true });
-    sendMail(user.email, '✅ Account Approved',
-      `<h2>Your account has been approved!</h2><p>Hi ${user.name}, your account has been approved. You can now login.</p><a href="${process.env.FRONTEND_URL}" style="background:#10b981;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;">Login Now</a>`);
-    res.json({ message: 'User approved' });
-  } catch (e) { res.status(500).json({ message: 'Server error' }); }
-});
-
-router.put('/reject-user/:id', auth, async (req, res) => {
-  try {
-    const admin = await User.findById(req.user.id);
-    if (admin.email !== SUPER_ADMIN) return res.status(403).json({ message: 'Not authorized.' });
-    const user = await User.findByIdAndUpdate(req.params.id, { status: 'rejected' }, { new: true });
-    sendMail(user.email, '❌ Account Rejected',
-      `<h2>Account Registration Update</h2><p>Hi ${user.name}, unfortunately your account registration has been rejected. Contact support for more information.</p>`);
-    res.json({ message: 'User rejected' });
-  } catch (e) { res.status(500).json({ message: 'Server error' }); }
-});
-
-// Bulk approve/reject
-router.put('/bulk-action', auth, async (req, res) => {
-  try {
-    const admin = await User.findById(req.user.id);
-    if (admin.email !== SUPER_ADMIN) return res.status(403).json({ message: 'Not authorized.' });
-    const { ids, action } = req.body;
-    const status = action === 'approve' ? 'approved' : 'rejected';
-    const users = await User.find({ _id: { $in: ids } });
-    await User.updateMany({ _id: { $in: ids } }, { status });
-    users.forEach(user => {
-      if (action === 'approve') {
-        sendMail(user.email, '✅ Account Approved',
-          `<h2>Your account has been approved!</h2><p>Hi ${user.name}, you can now login.</p><a href="${process.env.FRONTEND_URL}" style="background:#10b981;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;">Login Now</a>`);
-      } else {
-        sendMail(user.email, '❌ Account Rejected',
-          `<h2>Account Registration Update</h2><p>Hi ${user.name}, your account has been rejected.</p>`);
-      }
-    });
-    res.json({ message: `${ids.length} users ${status}` });
-  } catch (e) { res.status(500).json({ message: 'Server error' }); }
-});
-
-// Delete user
-router.delete('/delete-user/:id', auth, async (req, res) => {
-  try {
-    const userToDelete = await User.findById(req.params.id);
-    if (userToDelete.email === SUPER_ADMIN) return res.status(403).json({ message: 'Cannot delete the super admin.' });
-    await User.findByIdAndDelete(req.params.id);
-    await ScanLog.deleteMany({ userId: req.params.id });
-    res.json({ message: 'User deleted' });
-  } catch (e) { res.status(500).json({ message: 'Server error' }); }
+  try { res.json(await User.find({ status: 'pending' }).select('-password')); }
+  catch (e) { res.status(500).json({ message: 'Server error' }); }
 });
 
 router.get('/stats', auth, async (req, res) => {
   try {
-    const high = await ScanLog.countDocuments({ risk: 'HIGH' });
-    const medium = await ScanLog.countDocuments({ risk: 'MEDIUM' });
-    const low = await ScanLog.countDocuments({ risk: 'LOW' });
+    const [high, medium, low] = await Promise.all([
+      ScanLog.countDocuments({ risk: 'HIGH' }),
+      ScanLog.countDocuments({ risk: 'MEDIUM' }),
+      ScanLog.countDocuments({ risk: 'LOW' })
+    ]);
     res.json({ high, medium, low });
   } catch (e) { res.status(500).json({ message: 'Server error' }); }
 });
 
-// Get scan logs by risk level
 router.get('/scans/:risk', auth, async (req, res) => {
   try {
-    const risk = req.params.risk.toUpperCase();
-    const logs = await ScanLog.find({ risk }).sort({ createdAt: -1 }).limit(20);
+    const logs = await ScanLog.find({ risk: req.params.risk.toUpperCase() }).sort({ createdAt: -1 }).limit(20);
     res.json(logs);
   } catch (e) { res.status(500).json({ message: 'Server error' }); }
 });
 
-// Real trend data - last 7 days
 router.get('/trends', auth, async (req, res) => {
   try {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -124,91 +57,100 @@ router.get('/trends', auth, async (req, res) => {
   } catch (e) { res.status(500).json({ message: 'Server error' }); }
 });
 
-// Notifications - pending count
 router.get('/notifications', auth, async (req, res) => {
+  try { res.json({ pendingCount: await User.countDocuments({ status: 'pending' }) }); }
+  catch (e) { res.status(500).json({ message: 'Server error' }); }
+});
+
+router.get('/login-stats', auth, async (req, res) => {
   try {
-    const pendingCount = await User.countDocuments({ status: 'pending' });
-    res.json({ pendingCount });
+    const totalLogins = await User.aggregate([{ $group: { _id: null, total: { $sum: '$loginCount' } } }]);
+    const recentLogins = await User.find({ lastLogin: { $ne: null }, role: 'user' }).select('name email lastLogin loginCount').sort({ lastLogin: -1 }).limit(10);
+    const onlineCount = await User.countDocuments({ lastLogin: { $gte: new Date(Date.now() - 30 * 60 * 1000) }, role: 'user' });
+    res.json({ totalLogins: totalLogins[0]?.total || 0, recentLogins, onlineCount });
   } catch (e) { res.status(500).json({ message: 'Server error' }); }
 });
 
-// User requests admin role
+router.get('/admin-requests', auth, async (req, res) => {
+  try { res.json(await User.find({ adminRequest: 'pending' }).select('-password')); }
+  catch (e) { res.status(500).json({ message: 'Server error' }); }
+});
+
+router.put('/approve-user/:id', auth, async (req, res) => {
+  try {
+    const admin = await User.findById(req.user.id);
+    if (admin.email !== SUPER_ADMIN) return res.status(403).json({ message: 'Not authorized.' });
+    const user = await User.findByIdAndUpdate(req.params.id, { status: 'approved' }, { new: true });
+    sendMail(user.email, '✅ Account Approved', `<h2>Hi ${user.name}, your account has been approved!</h2><a href="${process.env.FRONTEND_URL}" style="background:#10b981;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;">Login Now</a>`);
+    res.json({ message: 'User approved' });
+  } catch (e) { res.status(500).json({ message: 'Server error' }); }
+});
+
+router.put('/reject-user/:id', auth, async (req, res) => {
+  try {
+    const admin = await User.findById(req.user.id);
+    if (admin.email !== SUPER_ADMIN) return res.status(403).json({ message: 'Not authorized.' });
+    const user = await User.findByIdAndUpdate(req.params.id, { status: 'rejected' }, { new: true });
+    sendMail(user.email, '❌ Account Rejected', `<h2>Hi ${user.name}, your account registration has been rejected.</h2>`);
+    res.json({ message: 'User rejected' });
+  } catch (e) { res.status(500).json({ message: 'Server error' }); }
+});
+
+router.put('/bulk-action', auth, async (req, res) => {
+  try {
+    const admin = await User.findById(req.user.id);
+    if (admin.email !== SUPER_ADMIN) return res.status(403).json({ message: 'Not authorized.' });
+    const { ids, action } = req.body;
+    const status = action === 'approve' ? 'approved' : 'rejected';
+    const users = await User.find({ _id: { $in: ids } });
+    await User.updateMany({ _id: { $in: ids } }, { status });
+    users.forEach(u => sendMail(u.email, status === 'approved' ? '✅ Account Approved' : '❌ Account Rejected', `<h2>Hi ${u.name}, your account has been ${status}.</h2>`));
+    res.json({ message: `${ids.length} users ${status}` });
+  } catch (e) { res.status(500).json({ message: 'Server error' }); }
+});
+
+router.delete('/delete-user/:id', auth, async (req, res) => {
+  try {
+    const userToDelete = await User.findById(req.params.id);
+    if (!userToDelete) return res.status(404).json({ message: 'User not found.' });
+    if (userToDelete.email === SUPER_ADMIN) return res.status(403).json({ message: 'Cannot delete the super admin.' });
+    await User.findByIdAndDelete(req.params.id);
+    await ScanLog.deleteMany({ userId: req.params.id });
+    res.json({ message: 'Deleted successfully' });
+  } catch (e) { res.status(500).json({ message: 'Server error' }); }
+});
+
+router.put('/approve-admin-request/:id', auth, async (req, res) => {
+  try {
+    const admin = await User.findById(req.user.id);
+    if (admin.email !== SUPER_ADMIN) return res.status(403).json({ message: 'Not authorized.' });
+    const user = await User.findByIdAndUpdate(req.params.id, { role: 'admin', adminRequest: 'approved', status: 'approved' }, { new: true });
+    sendMail(user.email, '✅ Admin Request Approved', `<h2>Hi ${user.name}, you now have admin access!</h2><a href="${process.env.FRONTEND_URL}" style="background:#10b981;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;">Login Now</a>`);
+    res.json({ message: 'Admin request approved' });
+  } catch (e) { res.status(500).json({ message: 'Server error' }); }
+});
+
+router.put('/reject-admin-request/:id', auth, async (req, res) => {
+  try {
+    const admin = await User.findById(req.user.id);
+    if (admin.email !== SUPER_ADMIN) return res.status(403).json({ message: 'Not authorized.' });
+    const user = await User.findByIdAndUpdate(req.params.id, { adminRequest: 'rejected' }, { new: true });
+    sendMail(user.email, '❌ Admin Request Rejected', `<h2>Hi ${user.name}, your admin request has been rejected.</h2>`);
+    res.json({ message: 'Admin request rejected' });
+  } catch (e) { res.status(500).json({ message: 'Server error' }); }
+});
+
 router.post('/request-admin', auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     if (user.role === 'admin') return res.status(400).json({ message: 'Already an admin.' });
     if (user.adminRequest === 'pending') return res.status(400).json({ message: 'Request already pending.' });
     await User.findByIdAndUpdate(req.user.id, { adminRequest: 'pending' });
-    sendMail(SUPER_ADMIN, '🔔 Admin Role Request',
-      `<h2>Admin Role Request</h2><p><b>Name:</b> ${user.name}</p><p><b>Email:</b> ${user.email}</p><p>This user is requesting admin access. Login to approve or reject.</p><a href="${process.env.FRONTEND_URL}" style="background:#8b5cf6;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;">Go to Dashboard</a>`);
+    sendMail(SUPER_ADMIN, '🔔 Admin Role Request', `<h2>Admin Role Request</h2><p><b>Name:</b> ${user.name}</p><p><b>Email:</b> ${user.email}</p><a href="${process.env.FRONTEND_URL}" style="background:#8b5cf6;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;">Go to Dashboard</a>`);
     res.json({ message: 'Admin request sent successfully!' });
   } catch (e) { res.status(500).json({ message: 'Server error' }); }
 });
 
-// Get all admin requests
-router.get('/admin-requests', auth, async (req, res) => {
-  try {
-    const users = await User.find({ adminRequest: 'pending' }).select('-password');
-    res.json(users);
-  } catch (e) { res.status(500).json({ message: 'Server error' }); }
-});
-
-// Approve admin request
-router.put('/approve-admin-request/:id', auth, async (req, res) => {
-  try {
-    const admin = await User.findById(req.user.id);
-    if (admin.email !== SUPER_ADMIN) return res.status(403).json({ message: 'Not authorized.' });
-    const user = await User.findByIdAndUpdate(req.params.id, { role: 'admin', adminRequest: 'approved', status: 'approved' }, { new: true });
-    sendMail(user.email, '✅ Admin Request Approved',
-      `<h2>Your admin request has been approved!</h2><p>Hi ${user.name}, you now have admin access.</p><a href="${process.env.FRONTEND_URL}" style="background:#10b981;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;">Login Now</a>`);
-    res.json({ message: 'Admin request approved' });
-  } catch (e) { res.status(500).json({ message: 'Server error' }); }
-});
-
-// Reject admin request
-router.put('/reject-admin-request/:id', auth, async (req, res) => {
-  try {
-    const admin = await User.findById(req.user.id);
-    if (admin.email !== SUPER_ADMIN) return res.status(403).json({ message: 'Not authorized.' });
-    const user = await User.findByIdAndUpdate(req.params.id, { adminRequest: 'rejected' }, { new: true });
-    sendMail(user.email, '❌ Admin Request Rejected',
-      `<h2>Admin Request Update</h2><p>Hi ${user.name}, your request for admin access has been rejected.</p>`);
-    res.json({ message: 'Admin request rejected' });
-  } catch (e) { res.status(500).json({ message: 'Server error' }); }
-});
-
-// Login stats - count and history
-router.get('/login-stats', auth, async (req, res) => {
-  try {
-    const totalLogins = await User.aggregate([{ $group: { _id: null, total: { $sum: '$loginCount' } } }]);
-    const recentLogins = await User.find({ lastLogin: { $ne: null }, role: 'user' })
-      .select('name email lastLogin loginCount')
-      .sort({ lastLogin: -1 })
-      .limit(10);
-    const onlineCount = await User.countDocuments({
-      lastLogin: { $gte: new Date(Date.now() - 30 * 60 * 1000) },
-      role: 'user'
-    });
-    res.json({
-      totalLogins: totalLogins[0]?.total || 0,
-      recentLogins,
-      onlineCount
-    });
-  } catch (e) { res.status(500).json({ message: 'Server error' }); }
-});
-
-// One-time cleanup: convert all other admins to users
-router.post('/cleanup-admins', async (req, res) => {
-  try {
-    const result = await User.updateMany(
-      { role: 'admin', email: { $ne: 'giriraja.ec23@bitsathy.ac.in' } },
-      { role: 'user', status: 'pending' }
-    );
-    res.json({ message: `${result.modifiedCount} admin accounts converted to users` });
-  } catch (e) { res.status(500).json({ message: 'Server error' }); }
-});
-
-// Reset and reseed lessons and quizzes - GET for easy browser access
 router.get('/reseed', async (req, res) => {
   try {
     const Lesson = require('../models/Lesson');
@@ -245,14 +187,9 @@ router.get('/reseed', async (req, res) => {
       { title: 'Online Shopping Safety Quiz', description: 'Safe e-commerce', isDemo: false, status: 'waiting' }
     ];
     for (const q of quizData) {
-      const questions = Array.from({ length: 20 }, (_, i) => ({
-        question: `${q.title} - Question ${i + 1}: What is the best security practice?`,
-        options: ['Always verify the source', 'Ignore warnings', 'Share your password', 'Click all links'],
-        correctAnswer: 'Always verify the source'
-      }));
-      await Quiz.create({ ...q, questions });
+      await Quiz.create({ ...q, questions: Array.from({ length: 20 }, (_, i) => ({ question: `${q.title} - Q${i + 1}: What is the best security practice?`, options: ['Always verify the source', 'Ignore warnings', 'Share your password', 'Click all links'], correctAnswer: 'Always verify the source' })) });
     }
-    res.json({ message: '3 active lessons, 12 waiting lessons, 3 active quizzes, 7 waiting quizzes seeded!' });
+    res.json({ message: '✅ 3 active + 12 waiting lessons, 3 active + 7 waiting quizzes seeded!' });
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
 
