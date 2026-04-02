@@ -28,25 +28,23 @@ export default function ManageLessons() {
       if (editId) {
         await api.put(`/lessons/${editId}`, form);
       } else {
-        await api.post("/lessons/create", form);
+        await api.post("/lessons/create", { ...form, status: 'waiting' });
       }
       setShowForm(false);
-      setForm({ title: "", description: "", content: "", icon: "📚", level: "Beginner", duration: "10 min", isFree: false });
+      setForm({ title: '', description: '', content: '', icon: '📚', level: 'Beginner', duration: '10 min', isFree: false });
       setEditId(null);
       loadLessons();
-    } catch (e) {
-      alert("Error saving lesson");
-    }
+    } catch (e) { alert('Error saving lesson'); }
   };
 
   const editLesson = (lesson) => {
     setForm(lesson);
-    setEditId(lesson.id);
+    setEditId(lesson._id);
     setShowForm(true);
   };
 
   const deleteLesson = async (id) => {
-    if (window.confirm("Delete this lesson?")) {
+    if (window.confirm('Delete this lesson?')) {
       await api.delete(`/lessons/${id}`);
       loadLessons();
     }
@@ -56,9 +54,7 @@ export default function ManageLessons() {
     try {
       await api.post(`/lessons/activate/${id}`);
       loadLessons();
-    } catch (e) {
-      alert("Error activating lesson");
-    }
+    } catch (e) { alert('Error launching lesson'); }
   };
 
   return (
@@ -133,7 +129,7 @@ export default function ManageLessons() {
 
       <div className="lessons-table">
         {Array.isArray(lessons) && lessons.map((lesson) => (
-          <div key={lesson.id} className="lesson-row">
+          <div key={lesson._id} className="lesson-row">
             <span className="lesson-icon">{lesson.icon}</span>
             <div className="lesson-info">
               <h3>{lesson.title}</h3>
@@ -148,10 +144,10 @@ export default function ManageLessons() {
             </div>
             <div className="lesson-actions">
               {(lesson.status === 'waiting' || lesson.status === 'pending') && (
-                <button onClick={() => activateLesson(lesson.id)} className="activate-btn">🚀 Activate</button>
+                <button onClick={() => activateLesson(lesson._id)} className="activate-btn">🚀 Launch</button>
               )}
               <button onClick={() => editLesson(lesson)} className="edit-btn">✏️ Edit</button>
-              <button onClick={() => deleteLesson(lesson.id)} className="delete-btn">🗑️ Delete</button>
+              <button onClick={() => deleteLesson(lesson._id)} className="delete-btn">🗑️ Delete</button>
             </div>
           </div>
         ))}

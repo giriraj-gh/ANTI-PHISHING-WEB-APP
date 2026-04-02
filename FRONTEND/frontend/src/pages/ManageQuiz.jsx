@@ -29,11 +29,10 @@ export default function ManageQuiz() {
   };
 
   const activateQuiz = async (id) => {
-    const quizzes = JSON.parse(localStorage.getItem('quizzes') || '[]');
-    const idx = quizzes.findIndex(q => q.id === id);
-    if (idx !== -1) quizzes[idx].status = 'active';
-    localStorage.setItem('quizzes', JSON.stringify(quizzes));
-    loadQuizzes();
+    try {
+      await api.put(`/quiz/${id}`, { status: 'active' });
+      loadQuizzes();
+    } catch (e) { alert('Error launching quiz'); }
   };
 
   const saveQuiz = async () => {
@@ -41,14 +40,12 @@ export default function ManageQuiz() {
       if (editId) {
         await api.put(`/quiz/${editId}`, form);
       } else {
-        await api.post("/quiz/create", form);
+        await api.post('/quiz/create', { ...form, status: 'waiting' });
       }
       setShowForm(false);
       resetForm();
       loadQuizzes();
-    } catch (e) {
-      alert("Error saving quiz");
-    }
+    } catch (e) { alert('Error saving quiz'); }
   };
 
   const resetForm = () => {
@@ -63,12 +60,12 @@ export default function ManageQuiz() {
 
   const editQuiz = (quiz) => {
     setForm(quiz);
-    setEditId(quiz.id);
+    setEditId(quiz._id);
     setShowForm(true);
   };
 
   const deleteQuiz = async (id) => {
-    if (window.confirm("Delete this quiz?")) {
+    if (window.confirm('Delete this quiz?')) {
       await api.delete(`/quiz/${id}`);
       loadQuizzes();
     }
@@ -203,14 +200,12 @@ export default function ManageQuiz() {
 
       <div className="quizzes-table">
         {Array.isArray(quizzes) && quizzes.map((quiz) => (
-          <div key={quiz.id} className="quiz-row">
+          <div key={quiz._id} className="quiz-row">
             <div className="quiz-info">
               <h3>{quiz.title}</h3>
               <p>{quiz.description}</p>
               <div className="quiz-meta">
-                <span className={`badge ${quiz.isDemo ? 'demo' : 'premium'}`}>
-                  {quiz.isDemo ? 'DEMO' : 'PREMIUM'}
-                </span>
+                <span className={`badge ${quiz.isDemo ? 'demo' : 'premium'}`}>{quiz.isDemo ? 'DEMO' : 'PREMIUM'}</span>
                 <span className={`badge ${quiz.status === 'waiting' ? 'waiting' : 'active-badge'}`}>
                   {quiz.status === 'waiting' ? '⏳ Waiting' : '✅ Active'}
                 </span>
@@ -219,10 +214,10 @@ export default function ManageQuiz() {
             </div>
             <div className="quiz-actions">
               {quiz.status === 'waiting' && (
-                <button onClick={() => activateQuiz(quiz.id)} className="activate-btn">🚀 Activate</button>
+                <button onClick={() => activateQuiz(quiz._id)} className="activate-btn">🚀 Launch</button>
               )}
               <button onClick={() => editQuiz(quiz)} className="edit-btn">✏️ Edit</button>
-              <button onClick={() => deleteQuiz(quiz.id)} className="delete-btn">🗑️ Delete</button>
+              <button onClick={() => deleteQuiz(quiz._id)} className="delete-btn">🗑️ Delete</button>
             </div>
           </div>
         ))}

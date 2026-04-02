@@ -131,6 +131,7 @@ export default function AdminDashboard() {
         {[
           {title:'High Risk',value:stats.high,icon:'🚨',color:'#dc2626'},
           {title:'Medium Risk',value:stats.medium,icon:'⚡',color:'#f59e0b'},
+          {title:'Low Risk',value:stats.low,icon:'✅',color:'#10b981'},
           {title:'Active Users',value:users.length,icon:'👥',color:'#10b981'},
           {title:'Pending',value:notifications,icon:'⏳',color:'#f59e0b'},
           {title:'Online Now',value:loginStats.onlineCount,icon:'🟢',color:'#10b981'},
@@ -233,6 +234,12 @@ export default function AdminDashboard() {
 
       )}
 
+      {/* User Search History */}
+      <div style={{ background: cardBg, padding: '1.5rem', borderRadius: '16px', border: `1px solid ${borderColor}`, marginBottom: '2rem' }}>
+        <h3 style={{ margin: '0 0 1rem', color: '#8b5cf6' }}>🔍 User URL Search History</h3>
+        <UserSearchHistory API={process.env.REACT_APP_API_URL || 'http://localhost:5000'} token={localStorage.getItem('token')} cardBg={cardBg} borderColor={borderColor} darkMode={darkMode} />
+      </div>
+
       {/* Login History */}
       <div style={{ background: cardBg, padding: '1.5rem', borderRadius: '16px', border: `1px solid ${borderColor}`, marginBottom: '2rem' }}>
         <h3 style={{ margin: '0 0 1rem', color: '#3b82f6' }}>🔑 Recent Login History</h3>
@@ -268,6 +275,41 @@ export default function AdminDashboard() {
           ))
         }
       </div>
+    </div>
+  );
+}
+
+function UserSearchHistory({ API, token }) {
+  const [scans, setScans] = React.useState([]);
+  const getRiskColor = (risk) => risk === 'HIGH' ? '#dc2626' : risk === 'MEDIUM' ? '#f59e0b' : '#10b981';
+  const getRiskIcon = (risk) => risk === 'HIGH' ? '🚨' : risk === 'MEDIUM' ? '⚠️' : '✅';
+  React.useEffect(() => {
+    fetch(`${API}/api/phish/all`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json()).then(data => setScans(Array.isArray(data) ? data.slice(0, 20) : [])).catch(() => {});
+  }, [API, token]);
+  if (scans.length === 0) return <p style={{ opacity: 0.6, textAlign: 'center', padding: '1rem' }}>No search history yet</p>;
+  return (
+    <div style={{ overflowX: 'auto' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ background: 'rgba(139,92,246,0.2)' }}>
+            {['User', 'URL Searched', 'Risk', 'Score', 'Date'].map(h => (
+              <th key={h} style={{ padding: '0.75rem 1rem', textAlign: 'left', color: '#a78bfa', fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {scans.map((s, i) => (
+            <tr key={i} style={{ borderTop: '1px solid rgba(139,92,246,0.1)' }}>
+              <td style={{ padding: '0.75rem 1rem', fontWeight: 600 }}>👤 {s.userName || 'Unknown'}</td>
+              <td style={{ padding: '0.75rem 1rem', fontFamily: 'monospace', fontSize: '0.85rem', maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.url}</td>
+              <td style={{ padding: '0.75rem 1rem' }}><span style={{ background: getRiskColor(s.risk), color: 'white', padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600 }}>{getRiskIcon(s.risk)} {s.risk}</span></td>
+              <td style={{ padding: '0.75rem 1rem', color: getRiskColor(s.risk), fontWeight: 700 }}>{s.score}/100</td>
+              <td style={{ padding: '0.75rem 1rem', opacity: 0.7, whiteSpace: 'nowrap' }}>{new Date(s.createdAt).toLocaleDateString()}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
