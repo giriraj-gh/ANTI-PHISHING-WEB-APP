@@ -15,19 +15,25 @@ const transporter = nodemailer.createTransport({
 
 const sendMail = (to, subject, html) => transporter.sendMail({ from: process.env.EMAIL_USER, to, subject, html }).catch(console.error);
 
+const SUPER_ADMIN = 'giriraja.ec23@bitsathy.ac.in';
+
 router.post('/register', loginLimiter, async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
     const exists = await User.findOne({ email });
     if (exists) return res.status(400).json({ message: 'Email already registered.' });
     const hashed = await bcrypt.hash(password, 10);
-    await User.create({ name, email, password: hashed, role, status: 'pending' });
-    // Notify all admins
-    const admins = await User.find({ role: 'admin', status: 'approved' }).select('email');
-    admins.forEach(admin => sendMail(admin.email, '🔔 New User Registration',
-      `<h2>New ${role} registration</h2><p><b>Name:</b> ${name}</p><p><b>Email:</b> ${email}</p><p>Login to admin panel to approve or reject.</p>`
-    ));
-    res.json({ message: 'Registration successful! Please wait for admin approval.' });
+    // Only giriraja.ec23@bitsathy.ac.in can be admin, everyone else is user
+    const assignedRole = (email === SUPER_ADMIN) ? 'admin' : 'user';
+    const status = assignedRole === 'admin' ? 'approved' : 'pending';
+    await User.create({ name, email, password: hashed, role: assignedRole, status });
+    // Notify admin if new user registered
+    if (assignedRole === 'user') {
+      sendMail(SUPER_ADMIN, '🔔 New User Registration',
+        `<h2>New user registration</h2><p><b>Name:</b> ${name}</p><p><b>Email:</b> ${email}</p><p>Login to admin panel to approve or reject.</p>`
+      );
+    }
+    res.json({ message: assignedRole === 'admin' ? 'Admin account created!' : 'Registration successful! Please wait for admin approval.' });
   } catch (e) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -36,6 +42,10 @@ router.post('/register', loginLimiter, async (req, res) => {
 router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { email, password, role } = req.body;
+    // Block non-super-admin from logging in as admin
+    if (role === 'admin' && email !== SUPER_ADMIN) {
+      return res.status(403).json({ message: 'You are not authorized as admin.' });
+    }
     const user = await User.findOne({ email, role });
     if (!user) return res.status(400).json({ message: 'Invalid credentials.' });
     const match = await bcrypt.compare(password, user.password);

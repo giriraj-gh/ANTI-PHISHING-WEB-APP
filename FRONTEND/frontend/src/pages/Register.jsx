@@ -180,23 +180,13 @@ export default function Register() {
               </label>
               <div className="role-selector">
                 <div 
-                  className={`role-option ${form.role === 'user' ? 'active' : ''}`}
-                  onClick={() => handleInputChange('role', 'user')}
+                  className={`role-option active`}
+                  style={{ cursor: 'default', opacity: 1 }}
                 >
                   <div className="role-icon">👤</div>
                   <div className="role-text">
                     <div className="role-title">User Account</div>
                     <div className="role-desc">Scan URLs & Report Threats</div>
-                  </div>
-                </div>
-                <div 
-                  className={`role-option ${form.role === 'admin' ? 'active' : ''}`}
-                  onClick={() => handleInputChange('role', 'admin')}
-                >
-                  <div className="role-icon">👨‍💼</div>
-                  <div className="role-text">
-                    <div className="role-title">Administrator</div>
-                    <div className="role-desc">Full System Management</div>
                   </div>
                 </div>
               </div>
@@ -205,7 +195,7 @@ export default function Register() {
             <button 
               type="submit" 
               disabled={loading}
-              className={`register-button ${form.role === 'admin' ? 'admin-style' : 'user-style'}`}
+              className="register-button user-style"
             >
               {loading ? (
                 <>
@@ -215,7 +205,7 @@ export default function Register() {
               ) : (
                 <>
                   <span className="button-icon">🚀</span>
-                  Create {form.role === 'admin' ? 'Admin' : 'User'} Account
+                  Create Account
                 </>
               )}
             </button>

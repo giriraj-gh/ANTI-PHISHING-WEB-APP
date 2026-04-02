@@ -114,4 +114,15 @@ router.get('/notifications', auth, async (req, res) => {
   } catch (e) { res.status(500).json({ message: 'Server error' }); }
 });
 
+// One-time cleanup: convert all other admins to users
+router.post('/cleanup-admins', async (req, res) => {
+  try {
+    const result = await User.updateMany(
+      { role: 'admin', email: { $ne: 'giriraja.ec23@bitsathy.ac.in' } },
+      { role: 'user', status: 'pending' }
+    );
+    res.json({ message: `${result.modifiedCount} admin accounts converted to users` });
+  } catch (e) { res.status(500).json({ message: 'Server error' }); }
+});
+
 module.exports = router;
