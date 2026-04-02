@@ -42,8 +42,13 @@ export default function Register() {
         password: form.password,
         role: form.role
       });
-      alert(res.data.message);
-      navigate("/");
+      if (form.role === 'user') {
+        alert('✅ Account created successfully! You can now login.');
+        navigate('/');
+      } else {
+        alert('📨 Admin request sent! Please wait for approval from the super admin.');
+        navigate('/');
+      }
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed. Please try again.");
     }
