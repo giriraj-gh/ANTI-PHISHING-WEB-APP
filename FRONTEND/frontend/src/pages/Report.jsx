@@ -7,43 +7,23 @@ export default function Report() {
   const [form, setForm] = useState({ url: "", description: "", category: "phishing" });
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
-  const [recentReports, setRecentReports] = useState([]);
   const role = localStorage.getItem("role");
   const isAdmin = role === "admin";
 
   useEffect(() => {
-    loadRecentReports();
+    // reports endpoint not needed - removed
   }, []);
 
-  const loadRecentReports = async () => {
-    try {
-      const res = await api.get("/phish/reports");
-      setRecentReports(res.data.slice(0, 5));
-    } catch (e) {
-      console.log("No reports found");
-    }
-  };
-
   const submit = async () => {
-    if (!form.url.trim()) {
-      setMsg("Please enter a URL to report");
-      return;
-    }
-
+    if (!form.url.trim()) { setMsg('Please enter a URL to report'); return; }
     try {
-      setLoading(true);
-      setMsg("");
-
-      await api.post("/phish/report", form);
-
-      setMsg("✅ Report submitted successfully! Thank you for helping keep the internet safe.");
-      setForm({ url: "", description: "", category: "phishing" });
-      loadRecentReports();
+      setLoading(true); setMsg('');
+      await api.post('/phish/report', form);
+      setMsg('✅ Report submitted successfully! Thank you for helping keep the internet safe.');
+      setForm({ url: '', description: '', category: 'phishing' });
     } catch (e) {
-      setMsg("❌ Failed to submit report. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+      setMsg('❌ Failed to submit report. Please try again.');
+    } finally { setLoading(false); }
   };
 
   const validateUrl = (url) => {
@@ -176,26 +156,7 @@ export default function Report() {
         </div>
       </div>
 
-      {recentReports.length > 0 && (
-        <div className="recent-reports">
-          <h3 className="reports-title">📋 Recent Community Reports</h3>
-          <div className="reports-list">
-            {recentReports.map((report, index) => (
-              <div key={index} className="report-item">
-                <div className="report-url">{report.url}</div>
-                <div className="report-category">
-                  {report.category || 'phishing'}
-                </div>
-                <div className="report-date">
-                  {new Date(report.createdAt).toLocaleDateString()}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <style jsx>{`
+ jsx>{`
         .report-container {
           min-height: 100vh;
           padding: 2rem;

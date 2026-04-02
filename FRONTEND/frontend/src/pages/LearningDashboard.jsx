@@ -3,176 +3,102 @@ import { useNavigate } from "react-router-dom";
 import api from "../api";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
-export default function Dashboard() {
+export default function LearningDashboard() {
   const nav = useNavigate();
-  const [progress, setProgress] = useState({ lessonsCompleted: 0, quizzesTaken: 0, avgScore: 0 });
   const [results, setResults] = useState([]);
-  const [recentActivity, setRecentActivity] = useState([]);
+  const [scans, setScans] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadDashboard();
+    Promise.all([
+      api.get("/results/all").catch(() => ({ data: [] })),
+      api.get("/phish/all").catch(() => ({ data: [] }))
+    ]).then(([resData, scanData]) => {
+      setResults(Array.isArray(resData.data) ? resData.data : []);
+      setScans(Array.isArray(scanData.data) ? scanData.data : []);
+      setLoading(false);
+    });
   }, []);
 
-  const loadDashboard = async () => {
-    try {
-      const res = await api.get("/dashboard/progress");
-      setProgress(res.data.progress);
-      setResults(res.data.results);
-      setRecentActivity(res.data.activity);
-    } catch (e) {
-      console.log("Error loading dashboard");
-    }
-  };
+  const totalQuizzes = results.length;
+  const passed = results.filter(r => r.passed).length;
+  const avgScore = totalQuizzes > 0 ? Math.round(results.reduce((a, r) => a + (r.percentage || 0), 0) / totalQuizzes) : 0;
+  const totalScans = scans.length;
 
-  const chartData = results.map((r, i) => ({
-    name: `Quiz ${i + 1}`,
-    score: r.percentage
+  const chartData = results.slice(0, 10).reverse().map((r, i) => ({
+    name: `Q${i + 1}`,
+    score: Math.round(r.percentage || 0)
   }));
 
   return (
-    <div className="dashboard-page">
-      <div className="dashboard-header">
-        <h1>📊 My Learning Dashboard</h1>
-        <button onClick={() => nav("/home")} className="back-btn">← Back to Home</button>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#0f172a,#1e293b)', color: 'white', padding: '2rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <h1 style={{ margin: 0, background: 'linear-gradient(45deg,#3b82f6,#8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>📊 My Learning Dashboard</h1>
+        <button onClick={() => nav("/home")} style={{ padding: '0.75rem 1.5rem', background: 'linear-gradient(45deg,#3b82f6,#1d4ed8)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>← Back to Home</button>
       </div>
 
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-icon">📚</div>
-          <div className="stat-content">
-            <h3>Lessons Completed</h3>
-            <p className="stat-value">{progress.lessonsCompleted}</p>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon">📝</div>
-          <div className="stat-content">
-            <h3>Quizzes Taken</h3>
-            <p className="stat-value">{progress.quizzesTaken}</p>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon">🎯</div>
-          <div className="stat-content">
-            <h3>Average Score</h3>
-            <p className="stat-value">{progress.avgScore}%</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="chart-section">
-        <h2>📈 Quiz Performance Trend</h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={chartData}>
-            <XAxis dataKey="name" stroke="#fff" />
-            <YAxis stroke="#fff" />
-            <Tooltip contentStyle={{ background: '#1f2937', border: 'none' }} />
-            <Line type="monotone" dataKey="score" stroke="#10b981" strokeWidth={3} />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
-      <div className="activity-section">
-        <h2>🕐 Recent Activity</h2>
-        <div className="activity-list">
-          {recentActivity.map((activity, idx) => (
-            <div key={idx} className="activity-item">
-              <span className="activity-icon">{activity.type === 'lesson' ? '📚' : '📝'}</span>
-              <span className="activity-text">{activity.title}</span>
-              <span className="activity-date">{activity.date}</span>
+      {/* Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+        {[
+          { icon: '📝', label: 'Quizzes Taken', value: totalQuizzes, color: '#3b82f6' },
+          { icon: '✅', label: 'Quizzes Passed', value: passed, color: '#10b981' },
+          { icon: '🎯', label: 'Average Score', value: `${avgScore}%`, color: '#8b5cf6' },
+          { icon: '🔍', label: 'URLs Scanned', value: totalScans, color: '#f59e0b' }
+        ].map(s => (
+          <div key={s.label} style={{ background: 'rgba(31,41,55,0.8)', padding: '1.5rem', borderRadius: '16px', border: `1px solid rgba(59,130,246,0.2)`, borderLeft: `4px solid ${s.color}`, display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <span style={{ fontSize: '2.5rem' }}>{s.icon}</span>
+            <div>
+              <p style={{ margin: 0, opacity: 0.7, fontSize: '0.9rem' }}>{s.label}</p>
+              <h2 style={{ margin: 0, color: s.color, fontSize: '2rem' }}>{s.value}</h2>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
 
-      <style jsx>{`
-        .dashboard-page {
-          min-height: 100vh;
-          background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-          color: white;
-          padding: 2rem;
-        }
+      {/* Chart */}
+      {chartData.length > 0 && (
+        <div style={{ background: 'rgba(31,41,55,0.8)', padding: '1.5rem', borderRadius: '16px', border: '1px solid rgba(59,130,246,0.2)', marginBottom: '2rem' }}>
+          <h3 style={{ margin: '0 0 1rem', color: '#3b82f6' }}>📈 Quiz Score Trend</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart data={chartData}>
+              <XAxis dataKey="name" stroke="#e5e7eb" />
+              <YAxis stroke="#e5e7eb" domain={[0, 100]} />
+              <Tooltip contentStyle={{ background: '#1f2937', border: 'none', borderRadius: '8px' }} />
+              <Line type="monotone" dataKey="score" stroke="#10b981" strokeWidth={3} dot={{ fill: '#10b981' }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
 
-        .dashboard-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 2rem;
-        }
+      {/* Quiz Results */}
+      <div style={{ background: 'rgba(31,41,55,0.8)', padding: '1.5rem', borderRadius: '16px', border: '1px solid rgba(59,130,246,0.2)', marginBottom: '2rem' }}>
+        <h3 style={{ margin: '0 0 1rem', color: '#3b82f6' }}>📝 Quiz History</h3>
+        {results.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '2rem', opacity: 0.6 }}>
+            <p>No quizzes taken yet.</p>
+            <button onClick={() => nav('/quiz')} style={{ padding: '0.75rem 1.5rem', background: 'linear-gradient(45deg,#10b981,#059669)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, marginTop: '1rem' }}>Take a Quiz →</button>
+          </div>
+        ) : results.map((r, i) => (
+          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'rgba(59,130,246,0.1)', borderRadius: '8px', borderLeft: `4px solid ${r.passed ? '#10b981' : '#dc2626'}`, marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <div>
+              <div style={{ fontWeight: 600 }}>{r.quizTitle}</div>
+              <div style={{ opacity: 0.6, fontSize: '0.85rem' }}>{new Date(r.createdAt).toLocaleDateString()}</div>
+            </div>
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+              <span style={{ fontWeight: 700, color: r.passed ? '#10b981' : '#dc2626', fontSize: '1.2rem' }}>{Math.round(r.percentage)}%</span>
+              <span style={{ background: r.passed ? 'rgba(16,185,129,0.2)' : 'rgba(220,38,38,0.2)', color: r.passed ? '#10b981' : '#dc2626', padding: '0.25rem 0.75rem', borderRadius: '20px', fontWeight: 600, fontSize: '0.85rem' }}>{r.passed ? '✅ PASSED' : '❌ FAILED'}</span>
+            </div>
+          </div>
+        ))}
+      </div>
 
-        .back-btn {
-          padding: 0.75rem 1.5rem;
-          background: linear-gradient(45deg, #3b82f6, #1d4ed8);
-          color: white;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-        }
-
-        .stats-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-          gap: 2rem;
-          margin-bottom: 3rem;
-        }
-
-        .stat-card {
-          background: rgba(31, 41, 55, 0.8);
-          padding: 2rem;
-          border-radius: 16px;
-          display: flex;
-          align-items: center;
-          gap: 1.5rem;
-          border: 1px solid rgba(59, 130, 246, 0.2);
-        }
-
-        .stat-icon {
-          font-size: 3rem;
-        }
-
-        .stat-value {
-          font-size: 2.5rem;
-          font-weight: 700;
-          margin: 0.5rem 0 0 0;
-          color: #10b981;
-        }
-
-        .chart-section, .activity-section {
-          background: rgba(31, 41, 55, 0.8);
-          padding: 2rem;
-          border-radius: 16px;
-          margin-bottom: 2rem;
-          border: 1px solid rgba(59, 130, 246, 0.2);
-        }
-
-        .activity-list {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-
-        .activity-item {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          padding: 1rem;
-          background: rgba(59, 130, 246, 0.1);
-          border-radius: 8px;
-        }
-
-        .activity-icon {
-          font-size: 1.5rem;
-        }
-
-        .activity-text {
-          flex: 1;
-        }
-
-        .activity-date {
-          opacity: 0.7;
-          font-size: 0.9rem;
-        }
-      `}</style>
+      {/* Quick Actions */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: '1rem' }}>
+        <button onClick={() => nav('/lessons')} style={{ padding: '1.5rem', background: 'linear-gradient(45deg,#8b5cf6,#7c3aed)', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 600, fontSize: '1rem' }}>📚 Study Lessons</button>
+        <button onClick={() => nav('/quiz')} style={{ padding: '1.5rem', background: 'linear-gradient(45deg,#10b981,#059669)', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 600, fontSize: '1rem' }}>📝 Take Quiz</button>
+        <button onClick={() => nav('/scan')} style={{ padding: '1.5rem', background: 'linear-gradient(45deg,#3b82f6,#1d4ed8)', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 600, fontSize: '1rem' }}>🔍 Scan URL</button>
+        <button onClick={() => nav('/scan-history')} style={{ padding: '1.5rem', background: 'linear-gradient(45deg,#f59e0b,#d97706)', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 600, fontSize: '1rem' }}>📋 Scan History</button>
+      </div>
     </div>
   );
 }
