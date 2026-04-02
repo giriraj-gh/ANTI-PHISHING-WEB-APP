@@ -21,6 +21,16 @@ router.post('/create', auth, async (req, res) => {
   }
 });
 
+router.put('/activate/:id', auth, async (req, res) => {
+  const Quiz = require('../models/Quiz');
+  try {
+    await Quiz.findByIdAndUpdate(req.params.id, { status: 'active' });
+    res.json({ message: 'Quiz activated' });
+  } catch (e) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 router.put('/:id', auth, async (req, res) => {
   const Quiz = require('../models/Quiz');
   try {

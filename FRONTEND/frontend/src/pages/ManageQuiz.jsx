@@ -30,7 +30,7 @@ export default function ManageQuiz() {
 
   const activateQuiz = async (id) => {
     try {
-      await api.put(`/quiz/${id}`, { status: 'active' });
+      await api.put(`/quiz/activate/${id}`);
       loadQuizzes();
     } catch (e) { alert('Error launching quiz'); }
   };

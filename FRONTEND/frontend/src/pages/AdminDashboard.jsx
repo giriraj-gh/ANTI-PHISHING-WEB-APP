@@ -141,7 +141,6 @@ export default function AdminDashboard() {
           {title:'Low Risk',value:stats.low,icon:'✅',color:'#10b981'},
           {title:'Active Users',value:users.length,icon:'👥',color:'#10b981'},
           {title:'Pending',value:notifications,icon:'⏳',color:'#f59e0b'},
-          {title:'Online Now',value:loginStats.onlineCount,icon:'🟢',color:'#10b981'},
           {title:'Total Logins',value:loginStats.totalLogins,icon:'🔑',color:'#3b82f6'}
         ].map(s => (
           <div key={s.title} style={{ background: cardBg, padding: '1.5rem', borderRadius: '12px', border: `1px solid ${borderColor}`, borderLeft: `4px solid ${s.color}`, display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -363,7 +362,7 @@ function LowRiskTable({ API, token, cardBg, borderColor }) {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: 'rgba(16,185,129,0.2)' }}>
-                {['User', 'URL', 'Score', 'Date'].map(h => (
+                {['#', 'User', 'URL', 'Score', 'Date'].map(h => (
                   <th key={h} style={{ padding: '0.75rem 1rem', textAlign: 'left', color: '#6ee7b7', fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
@@ -371,10 +370,11 @@ function LowRiskTable({ API, token, cardBg, borderColor }) {
             <tbody>
               {logs.map((s, i) => (
                 <tr key={i} style={{ borderTop: '1px solid rgba(16,185,129,0.1)' }}>
+                  <td style={{ padding: '0.75rem 1rem', opacity: 0.6 }}>{i + 1}</td>
                   <td style={{ padding: '0.75rem 1rem', fontWeight: 600 }}>👤 {s.userName || 'Unknown'}</td>
                   <td style={{ padding: '0.75rem 1rem', fontFamily: 'monospace', fontSize: '0.85rem', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.url}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#10b981', fontWeight: 700 }}>{s.score}/100</td>
-                  <td style={{ padding: '0.75rem 1rem', opacity: 0.7, whiteSpace: 'nowrap' }}>{new Date(s.createdAt).toLocaleDateString()}</td>
+                  <td style={{ padding: '0.75rem 1rem', opacity: 0.7, whiteSpace: 'nowrap' }}>{new Date(s.createdAt).toLocaleDateString()} {new Date(s.createdAt).toLocaleTimeString()}</td>
                 </tr>
               ))}
             </tbody>
