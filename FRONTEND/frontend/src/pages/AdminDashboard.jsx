@@ -139,9 +139,8 @@ export default function AdminDashboard() {
           {title:'High Risk',value:stats.high,icon:'🚨',color:'#dc2626'},
           {title:'Medium Risk',value:stats.medium,icon:'⚡',color:'#f59e0b'},
           {title:'Low Risk',value:stats.low,icon:'✅',color:'#10b981'},
-          {title:'Active Users',value:users.length,icon:'👥',color:'#10b981'},
-          {title:'Pending',value:notifications,icon:'⏳',color:'#f59e0b'},
-          {title:'Total Logins',value:loginStats.totalLogins,icon:'🔑',color:'#3b82f6'}
+          {title:'Active Users',value:users.length,icon:'👥',color:'#3b82f6'},
+          {title:'Pending Approval',value:notifications,icon:'⏳',color:'#f59e0b'}
         ].map(s => (
           <div key={s.title} style={{ background: cardBg, padding: '1.5rem', borderRadius: '12px', border: `1px solid ${borderColor}`, borderLeft: `4px solid ${s.color}`, display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <span style={{ fontSize: '2rem' }}>{s.icon}</span>
