@@ -52,6 +52,7 @@ router.post('/login', loginLimiter, async (req, res) => {
     if (!match) return res.status(400).json({ message: 'Invalid credentials.' });
     if (user.status === 'pending') return res.status(403).json({ message: 'Your account is pending admin approval.' });
     if (user.status === 'rejected') return res.status(403).json({ message: 'Your account has been rejected.' });
+    await User.findByIdAndUpdate(user._id, { lastLogin: new Date(), $inc: { loginCount: 1 } });
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
     res.json({ token, role: user.role, user });
   } catch (e) {

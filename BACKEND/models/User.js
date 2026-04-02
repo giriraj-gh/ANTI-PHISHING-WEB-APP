@@ -12,7 +12,9 @@ const userSchema = new mongoose.Schema({
   address: String,
   bio: String,
   profilePicture: String,
-  adminRequest: { type: String, enum: ['none', 'pending', 'approved', 'rejected'], default: 'none' }
+  adminRequest: { type: String, enum: ['none', 'pending', 'approved', 'rejected'], default: 'none' },
+  lastLogin: Date,
+  loginCount: { type: Number, default: 0 }
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

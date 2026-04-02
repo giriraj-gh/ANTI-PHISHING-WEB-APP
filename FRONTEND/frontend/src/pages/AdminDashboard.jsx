@@ -13,6 +13,7 @@ export default function AdminDashboard() {
   const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'true');
   const [notifications, setNotifications] = useState(0);
   const [adminRequests, setAdminRequests] = useState([]);
+  const [loginStats, setLoginStats] = useState({ totalLogins: 0, recentLogins: [], onlineCount: 0 });
 
   const chartData = [
     { name: 'High Risk', value: stats.high, color: '#dc2626' },
@@ -28,13 +29,14 @@ export default function AdminDashboard() {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
       const API = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-      const [usersRes, pendingRes, statsRes, trendsRes, notifRes, adminReqRes] = await Promise.all([
+      const [usersRes, pendingRes, statsRes, trendsRes, notifRes, adminReqRes, loginStatsRes] = await Promise.all([
         fetch(`${API}/api/admin/users`, { headers }),
         fetch(`${API}/api/admin/pending-users`, { headers }),
         fetch(`${API}/api/admin/stats`, { headers }),
         fetch(`${API}/api/admin/trends`, { headers }),
         fetch(`${API}/api/admin/notifications`, { headers }),
-        fetch(`${API}/api/admin/admin-requests`, { headers })
+        fetch(`${API}/api/admin/admin-requests`, { headers }),
+        fetch(`${API}/api/admin/login-stats`, { headers })
       ]);
       setUsers(await usersRes.json());
       setPendingUsers(await pendingRes.json());
@@ -42,6 +44,7 @@ export default function AdminDashboard() {
       setTrendData(await trendsRes.json());
       setNotifications((await notifRes.json()).pendingCount);
       setAdminRequests(await adminReqRes.json());
+      setLoginStats(await loginStatsRes.json());
       const profileRes = await fetch(`${API}/api/auth/profile`, { headers });
       const profileData = await profileRes.json();
       setAdmin(profileData);
@@ -125,7 +128,14 @@ export default function AdminDashboard() {
       </div>
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-        {[{title:'High Risk',value:stats.high,icon:'🚨',color:'#dc2626'},{title:'Medium Risk',value:stats.medium,icon:'⚡',color:'#f59e0b'},{title:'Active Users',value:users.length,icon:'👥',color:'#10b981'},{title:'Pending',value:notifications,icon:'⏳',color:'#f59e0b'}].map(s => (
+        {[
+          {title:'High Risk',value:stats.high,icon:'🚨',color:'#dc2626'},
+          {title:'Medium Risk',value:stats.medium,icon:'⚡',color:'#f59e0b'},
+          {title:'Active Users',value:users.length,icon:'👥',color:'#10b981'},
+          {title:'Pending',value:notifications,icon:'⏳',color:'#f59e0b'},
+          {title:'Online Now',value:loginStats.onlineCount,icon:'🟢',color:'#10b981'},
+          {title:'Total Logins',value:loginStats.totalLogins,icon:'🔑',color:'#3b82f6'}
+        ].map(s => (
           <div key={s.title} style={{ background: cardBg, padding: '1.5rem', borderRadius: '12px', border: `1px solid ${borderColor}`, borderLeft: `4px solid ${s.color}`, display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <span style={{ fontSize: '2rem' }}>{s.icon}</span>
             <div><p style={{ margin: 0, opacity: 0.7, fontSize: '0.9rem' }}>{s.title}</p><h2 style={{ margin: 0, color: s.color }}>{s.value}</h2></div>
@@ -222,6 +232,25 @@ export default function AdminDashboard() {
       </div>
 
       )}
+
+      {/* Login History */}
+      <div style={{ background: cardBg, padding: '1.5rem', borderRadius: '16px', border: `1px solid ${borderColor}`, marginBottom: '2rem' }}>
+        <h3 style={{ margin: '0 0 1rem', color: '#3b82f6' }}>🔑 Recent Login History</h3>
+        {loginStats.recentLogins?.length === 0 ? <p style={{ opacity: 0.6, textAlign: 'center', padding: '1rem' }}>No logins yet</p> :
+          loginStats.recentLogins?.map(user => (
+            <div key={user._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', background: 'rgba(59,130,246,0.1)', borderRadius: '8px', borderLeft: '4px solid #3b82f6', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <div>
+                <div style={{ fontWeight: 600 }}>👤 {user.name}</div>
+                <div style={{ opacity: 0.7, fontSize: '0.85rem' }}>{user.email}</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '0.85rem', color: '#3b82f6', fontWeight: 600 }}>Last Login: {new Date(user.lastLogin).toLocaleString()}</div>
+                <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>Total Logins: {user.loginCount}</div>
+              </div>
+            </div>
+          ))
+        }
+      </div>
 
       {/* Users List with Delete */}
       <div style={{ background: cardBg, padding: '1.5rem', borderRadius: '16px', border: `1px solid ${borderColor}` }}>

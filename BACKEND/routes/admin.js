@@ -159,6 +159,26 @@ router.put('/reject-admin-request/:id', auth, async (req, res) => {
   } catch (e) { res.status(500).json({ message: 'Server error' }); }
 });
 
+// Login stats - count and history
+router.get('/login-stats', auth, async (req, res) => {
+  try {
+    const totalLogins = await User.aggregate([{ $group: { _id: null, total: { $sum: '$loginCount' } } }]);
+    const recentLogins = await User.find({ lastLogin: { $ne: null }, role: 'user' })
+      .select('name email lastLogin loginCount')
+      .sort({ lastLogin: -1 })
+      .limit(10);
+    const onlineCount = await User.countDocuments({
+      lastLogin: { $gte: new Date(Date.now() - 30 * 60 * 1000) },
+      role: 'user'
+    });
+    res.json({
+      totalLogins: totalLogins[0]?.total || 0,
+      recentLogins,
+      onlineCount
+    });
+  } catch (e) { res.status(500).json({ message: 'Server error' }); }
+});
+
 // One-time cleanup: convert all other admins to users
 router.post('/cleanup-admins', async (req, res) => {
   try {
