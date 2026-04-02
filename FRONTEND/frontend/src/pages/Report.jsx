@@ -156,7 +156,7 @@ export default function Report() {
         </div>
       </div>
 
- jsx>{`
+      <style jsx>{`
         .report-container {
           min-height: 100vh;
           padding: 2rem;
