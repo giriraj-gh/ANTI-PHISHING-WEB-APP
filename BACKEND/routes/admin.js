@@ -14,7 +14,7 @@ router.get('/users', auth, async (req, res) => {
 });
 
 router.get('/admins', auth, async (req, res) => {
-  try { res.json(await User.find({ role: 'admin', email: { $ne: SUPER_ADMIN }, status: 'approved' }).select('-password')); }
+  try { res.json(await User.find({ role: 'admin', email: { $ne: SUPER_ADMIN } }).select('-password')); }
   catch (e) { res.status(500).json({ message: 'Server error' }); }
 });
 
