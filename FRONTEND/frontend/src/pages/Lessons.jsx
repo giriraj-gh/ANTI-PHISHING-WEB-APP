@@ -13,11 +13,9 @@ export default function Lessons() {
   const loadLessons = useCallback(async () => {
     try {
       const res = await api.get("/lessons/all");
-      console.log('API Response:', res.data);
-      console.log('User role:', role);
-      // Show all active lessons for users
-      const filteredLessons = res.data.filter(lesson => lesson.status === 'active');
-      console.log('Filtered lessons:', filteredLessons);
+      const data = Array.isArray(res.data) ? res.data : [];
+      // Show active lessons only (or all if no status field)
+      const filteredLessons = data.filter(lesson => !lesson.status || lesson.status === 'active');
       setLessons(filteredLessons);
     } catch (e) {
       console.log("Error loading lessons:", e);

@@ -208,8 +208,8 @@ router.post('/cleanup-admins', async (req, res) => {
   } catch (e) { res.status(500).json({ message: 'Server error' }); }
 });
 
-// Reset and reseed lessons and quizzes
-router.post('/reseed', async (req, res) => {
+// Reset and reseed lessons and quizzes - GET for easy browser access
+router.get('/reseed', async (req, res) => {
   try {
     const Lesson = require('../models/Lesson');
     const Quiz = require('../models/Quiz');
