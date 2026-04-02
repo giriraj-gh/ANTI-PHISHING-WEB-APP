@@ -52,7 +52,7 @@ export default function ManageLessons() {
 
   const activateLesson = async (id) => {
     try {
-      await api.post(`/lessons/activate/${id}`);
+      await api.put(`/lessons/activate/${id}`);
       loadLessons();
     } catch (e) { alert('Error launching lesson'); }
   };

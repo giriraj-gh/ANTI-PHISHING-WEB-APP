@@ -41,7 +41,7 @@ router.delete('/:id', auth, async (req, res) => {
   }
 });
 
-router.post('/activate/:id', auth, async (req, res) => {
+router.put('/activate/:id', auth, async (req, res) => {
   const Lesson = require('../models/Lesson');
   try {
     await Lesson.findByIdAndUpdate(req.params.id, { status: 'active' });
