@@ -5,479 +5,177 @@ import api from "../api";
 export default function Quiz() {
   const nav = useNavigate();
   const [quizzes, setQuizzes] = useState([]);
-  const [currentQuiz, setCurrentQuiz] = useState(null);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState({});
-  const [showResult, setShowResult] = useState(false);
+  const [quiz, setQuiz] = useState(null);
+  const [qIdx, setQIdx] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [answered, setAnswered] = useState(false);
   const [score, setScore] = useState(0);
-  const [passed, setPassed] = useState(false);
+  const [done, setDone] = useState(false);
   const token = localStorage.getItem("token");
+  const role = localStorage.getItem("role");
   const isGuest = !token;
+  const isAdmin = role === "admin";
 
   useEffect(() => {
-    loadQuizzes();
-  }, []);
-
-  const loadQuizzes = async () => {
-    try {
-      const res = await api.get("/quiz/all");
-      const role = localStorage.getItem('role');
+    api.get("/quiz/all").then(res => {
       const all = Array.isArray(res.data) ? res.data : [];
-      // Admin sees all 20, users only see active quizzes (10)
-      setQuizzes(role === 'admin' ? all : all.filter(q => q.status === 'active'));
-    } catch (e) {
-      console.log("Error loading quizzes");
-    }
+      setQuizzes(isAdmin ? all : all.filter(q => !q.status || q.status === 'active'));
+    }).catch(() => {});
+  }, [isAdmin]);
+
+  const startQuiz = (q) => {
+    if (isGuest && !q.isDemo) { alert("Please register to take full quizzes"); nav("/register"); return; }
+    setQuiz(q); setQIdx(0); setSelected(null); setAnswered(false); setScore(0); setDone(false);
   };
 
-  const startQuiz = (quiz) => {
-    if (isGuest && !quiz.isDemo) {
-      alert("Please register to take full quizzes");
-      nav("/register");
-      return;
-    }
-    setCurrentQuiz(quiz);
-    setCurrentQuestion(0);
-    setAnswers({});
-    setShowResult(false);
+  const pick = (option) => {
+    if (answered) return;
+    setSelected(option);
+    setAnswered(true);
+    if (option === quiz.questions[qIdx].correctAnswer) setScore(s => s + 1);
   };
 
-  const selectAnswer = (answer) => {
-    setAnswers({ ...answers, [currentQuestion]: answer });
-  };
-
-  const nextQuestion = () => {
-    if (currentQuestion < currentQuiz.questions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
+  const next = async () => {
+    if (qIdx < quiz.questions.length - 1) {
+      setQIdx(i => i + 1); setSelected(null); setAnswered(false);
     } else {
-      submitQuiz();
+      setDone(true);
+      if (!isGuest) {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const total = quiz.questions.length;
+        const finalScore = score + (selected === quiz.questions[qIdx].correctAnswer ? 0 : 0);
+        const pct = (score / total) * 100;
+        try { await api.post('/results/save', { quizTitle: quiz.title, userName: user.name, score, total, percentage: pct, passed: pct >= 80 }); }
+        catch (e) {}
+      }
     }
   };
 
-  const submitQuiz = async () => {
-    let correct = 0;
-    currentQuiz.questions.forEach((q, idx) => {
-      if (answers[idx] === q.correctAnswer) correct++;
-    });
-    
-    const totalQuestions = currentQuiz.questions.length;
-    const percentage = (correct / totalQuestions) * 100;
-    const isPassed = percentage >= 80;
-    
-    setScore(correct);
-    setPassed(isPassed);
-    setShowResult(true);
-
-    if (!isGuest) {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const result = {
-        quizTitle: currentQuiz.title,
-        userName: user.name,
-        score: correct,
-        total: totalQuestions,
-        percentage: percentage,
-        passed: isPassed
-      };
-      try {
-        await api.post('/results/save', result);
-      } catch (e) { console.log('Error saving result'); }
-    }
+  const optionStyle = (option) => {
+    const correct = quiz.questions[qIdx].correctAnswer;
+    const base = { padding: '1rem 1.5rem', borderRadius: '12px', border: '2px solid', display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem', transition: 'all 0.2s', cursor: answered ? 'default' : 'pointer' };
+    if (!answered) return { ...base, background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.15)' };
+    if (option === correct) return { ...base, background: 'rgba(16,185,129,0.25)', borderColor: '#10b981' };
+    if (option === selected) return { ...base, background: 'rgba(220,38,38,0.25)', borderColor: '#dc2626' };
+    return { ...base, background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.05)', opacity: 0.4 };
   };
 
-  if (showResult) {
-    const percentage = (score / currentQuiz.questions.length) * 100;
+  // Result screen
+  if (done) {
+    const total = quiz.questions.length;
+    const pct = Math.round((score / total) * 100);
+    const passed = pct >= 80;
     return (
-      <div className="quiz-page">
-        <div className="result-card">
-          <div className={`result-icon ${passed ? 'passed' : 'failed'}`}>
-            {passed ? '🎉' : '😔'}
-          </div>
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#0f172a,#1e293b)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+        <div style={{ background: 'rgba(31,41,55,0.9)', padding: '3rem', borderRadius: '20px', textAlign: 'center', color: 'white', maxWidth: 600, width: '100%' }}>
+          <div style={{ fontSize: '5rem' }}>{passed ? '🎉' : '😔'}</div>
           <h2>{passed ? 'Congratulations! You Passed!' : 'Keep Learning!'}</h2>
-          <div className="score-display">
-            <div className={`score-circle ${passed ? 'passed' : 'failed'}`}>
-              <span className="score-text">{percentage.toFixed(0)}%</span>
-            </div>
+          <div style={{ width: 160, height: 160, borderRadius: '50%', background: passed ? 'linear-gradient(45deg,#10b981,#059669)' : 'linear-gradient(45deg,#dc2626,#b91c1c)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '1.5rem auto', border: `8px solid ${passed ? '#34d399' : '#f87171'}` }}>
+            <span style={{ fontSize: '3rem', fontWeight: 700 }}>{pct}%</span>
           </div>
-          <p className="score-details">You scored {score} out of {currentQuiz.questions.length}</p>
-          <div className={`pass-status ${passed ? 'passed' : 'failed'}`}>
+          <p style={{ fontSize: '1.2rem' }}>You scored {score} out of {total}</p>
+          <div style={{ padding: '1rem', borderRadius: '8px', fontWeight: 700, background: passed ? 'rgba(16,185,129,0.2)' : 'rgba(220,38,38,0.2)', color: passed ? '#10b981' : '#dc2626', border: `2px solid ${passed ? '#10b981' : '#dc2626'}`, margin: '1rem 0 2rem' }}>
             {passed ? '✅ PASSED - Minimum 80% Required' : '❌ FAILED - Minimum 80% Required'}
           </div>
-          {!passed && (
-            <p className="retry-message">Review the lesson and try again to pass!</p>
-          )}
-          <div className="result-actions">
-            <button onClick={() => setCurrentQuiz(null)} className="btn-primary">Back to Quizzes</button>
-            <button onClick={() => nav("/lessons")} className="btn-secondary">Review Lessons</button>
-            {!isGuest && <button onClick={() => nav("/home")} className="btn-home">View Dashboard</button>}
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+            <button onClick={() => { setQuiz(null); setDone(false); }} style={{ flex: 1, padding: '1rem', background: 'linear-gradient(45deg,#3b82f6,#1d4ed8)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>Back to Quizzes</button>
+            <button onClick={() => nav("/lessons")} style={{ flex: 1, padding: '1rem', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>Review Lessons</button>
+            {!isGuest && <button onClick={() => nav(isAdmin ? "/admin" : "/home")} style={{ flex: 1, padding: '1rem', background: 'linear-gradient(45deg,#10b981,#059669)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>Dashboard</button>}
           </div>
         </div>
-        <style jsx>{`
-          .quiz-page {
-            min-height: 100vh;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-          }
-          .result-card {
-            background: rgba(31, 41, 55, 0.9);
-            padding: 3rem;
-            border-radius: 20px;
-            text-align: center;
-            color: white;
-            max-width: 600px;
-            width: 100%;
-          }
-          .result-icon {
-            font-size: 5rem;
-            margin-bottom: 1rem;
-          }
-          .result-icon.passed {
-            animation: bounce 1s ease;
-          }
-          @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
-          }
-          .score-circle {
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 2rem auto;
-            border: 8px solid;
-          }
-          .score-circle.passed {
-            background: linear-gradient(45deg, #10b981, #059669);
-            border-color: #34d399;
-          }
-          .score-circle.failed {
-            background: linear-gradient(45deg, #dc2626, #b91c1c);
-            border-color: #f87171;
-          }
-          .score-text {
-            font-size: 3.5rem;
-            font-weight: 700;
-          }
-          .score-details {
-            font-size: 1.2rem;
-            margin: 1rem 0;
-          }
-          .pass-status {
-            padding: 1rem;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 1.1rem;
-            margin: 1.5rem 0;
-          }
-          .pass-status.passed {
-            background: rgba(16, 185, 129, 0.2);
-            color: #10b981;
-            border: 2px solid #10b981;
-          }
-          .pass-status.failed {
-            background: rgba(220, 38, 38, 0.2);
-            color: #dc2626;
-            border: 2px solid #dc2626;
-          }
-          .retry-message {
-            color: #f59e0b;
-            font-style: italic;
-            margin: 1rem 0;
-          }
-          .result-actions {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
-            flex-wrap: wrap;
-          }
-          .btn-primary, .btn-secondary, .btn-home {
-            flex: 1;
-            min-width: 150px;
-            padding: 1rem;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.3s ease;
-          }
-          .btn-primary {
-            background: linear-gradient(45deg, #3b82f6, #1d4ed8);
-            color: white;
-          }
-          .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-          }
-          .btn-home {
-            background: linear-gradient(45deg, #10b981, #059669);
-            color: white;
-          }
-          .btn-primary:hover, .btn-secondary:hover, .btn-home:hover {
-            transform: translateY(-2px);
-          }
-        `}</style>
       </div>
     );
   }
 
-  if (currentQuiz) {
-    const question = currentQuiz.questions[currentQuestion];
-    const progress = ((currentQuestion + 1) / currentQuiz.questions.length) * 100;
-    
+  // Question screen
+  if (quiz) {
+    const q = quiz.questions[qIdx];
+    const correct = q.correctAnswer;
+    const progress = ((qIdx + 1) / quiz.questions.length) * 100;
     return (
-      <div className="quiz-page">
-        <div className="quiz-container">
-          <div className="quiz-header">
-            <div className="quiz-info">
-              <span className="quiz-title">{currentQuiz.title}</span>
-              <span className="question-counter">Question {currentQuestion + 1} of {currentQuiz.questions.length}</span>
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#0f172a,#1e293b)', padding: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ background: 'rgba(31,41,55,0.9)', padding: '2rem', borderRadius: '20px', maxWidth: 800, width: '100%', color: 'white' }}>
+          {/* Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{quiz.title}</div>
+              <div style={{ opacity: 0.6, fontSize: '0.9rem' }}>Question {qIdx + 1} of {quiz.questions.length}</div>
             </div>
-            <button onClick={() => setCurrentQuiz(null)} className="close-btn">✕</button>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <span style={{ background: 'rgba(16,185,129,0.2)', color: '#10b981', padding: '0.4rem 0.8rem', borderRadius: '8px', fontWeight: 600 }}>Score: {score}</span>
+              <button onClick={() => setQuiz(null)} style={{ background: 'none', border: 'none', color: 'white', fontSize: '1.5rem', cursor: 'pointer' }}>✕</button>
+            </div>
           </div>
-          <div className="progress-bar">
-            <div className="progress-fill" style={{ width: `${progress}%` }}></div>
+
+          {/* Progress */}
+          <div style={{ height: 8, background: 'rgba(255,255,255,0.1)', borderRadius: 4, marginBottom: '1rem', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${progress}%`, background: 'linear-gradient(45deg,#10b981,#059669)', borderRadius: 4, transition: 'width 0.3s' }} />
           </div>
-          <div className="pass-requirement">
-            ⚠️ Pass Requirement: 80% ({Math.ceil(currentQuiz.questions.length * 0.8)} correct answers)
+
+          <div style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid #f59e0b', color: '#fbbf24', padding: '0.6rem 1rem', borderRadius: '8px', marginBottom: '1.5rem', textAlign: 'center', fontSize: '0.9rem', fontWeight: 600 }}>
+            ⚠️ Pass: 80% ({Math.ceil(quiz.questions.length * 0.8)} correct needed)
           </div>
-          <h2 className="question-text">{question.question}</h2>
-          <div className="answers-grid">
-            {question.options.map((option, idx) => (
-              <div
-                key={idx}
-                className={`answer-option ${answers[currentQuestion] === option ? 'selected' : ''}`}
-                onClick={() => selectAnswer(option)}
-              >
-                <span className="option-letter">{String.fromCharCode(65 + idx)}</span>
-                <span className="option-text">{option}</span>
-              </div>
-            ))}
-          </div>
-          <button
-            onClick={nextQuestion}
-            disabled={!answers[currentQuestion]}
-            className="next-btn"
-          >
-            {currentQuestion === currentQuiz.questions.length - 1 ? 'Submit Quiz' : 'Next Question →'}
-          </button>
+
+          <h2 style={{ margin: '0 0 1.5rem', fontSize: '1.2rem', lineHeight: 1.6 }}>{q.question}</h2>
+
+          {/* Options A, B, C, D */}
+          {q.options.map((option, idx) => (
+            <div key={idx} style={optionStyle(option)} onClick={() => pick(option)}>
+              <span style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(59,130,246,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }}>
+                {String.fromCharCode(65 + idx)}
+              </span>
+              <span style={{ flex: 1 }}>{option}</span>
+              {answered && option === correct && <span style={{ color: '#10b981', fontWeight: 700, fontSize: '1.2rem' }}>✓</span>}
+              {answered && option === selected && option !== correct && <span style={{ color: '#dc2626', fontWeight: 700, fontSize: '1.2rem' }}>✗</span>}
+            </div>
+          ))}
+
+          {/* Feedback */}
+          {answered && (
+            <div style={{ padding: '0.75rem 1rem', borderRadius: '8px', marginBottom: '1rem', fontWeight: 600, background: selected === correct ? 'rgba(16,185,129,0.15)' : 'rgba(220,38,38,0.15)', border: `1px solid ${selected === correct ? '#10b981' : '#dc2626'}`, color: selected === correct ? '#10b981' : '#dc2626' }}>
+              {selected === correct ? '✅ Correct!' : `❌ Wrong! Correct answer: ${correct}`}
+            </div>
+          )}
+
+          {/* Next button appears only after answering */}
+          {answered && (
+            <button onClick={next} style={{ width: '100%', padding: '1rem', background: 'linear-gradient(45deg,#10b981,#059669)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, fontSize: '1.1rem', cursor: 'pointer' }}>
+              {qIdx === quiz.questions.length - 1 ? '🏁 Finish Quiz' : 'Next Question →'}
+            </button>
+          )}
         </div>
-        <style jsx>{`
-          .quiz-page {
-            min-height: 100vh;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            padding: 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          }
-          .quiz-container {
-            background: rgba(31, 41, 55, 0.9);
-            padding: 2rem;
-            border-radius: 20px;
-            max-width: 800px;
-            width: 100%;
-            color: white;
-          }
-          .quiz-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-          }
-          .quiz-info {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-          }
-          .quiz-title {
-            font-weight: 700;
-            font-size: 1.2rem;
-          }
-          .question-counter {
-            font-size: 0.9rem;
-            opacity: 0.7;
-          }
-          .close-btn {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-          }
-          .progress-bar {
-            height: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 5px;
-            margin-bottom: 1rem;
-            overflow: hidden;
-          }
-          .progress-fill {
-            height: 100%;
-            background: linear-gradient(45deg, #10b981, #059669);
-            border-radius: 5px;
-            transition: width 0.3s ease;
-          }
-          .pass-requirement {
-            background: rgba(245, 158, 11, 0.2);
-            border: 1px solid #f59e0b;
-            color: #fbbf24;
-            padding: 0.75rem;
-            border-radius: 8px;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            font-weight: 600;
-          }
-          .question-text {
-            margin-bottom: 2rem;
-            font-size: 1.3rem;
-            line-height: 1.6;
-          }
-          .answers-grid {
-            display: grid;
-            gap: 1rem;
-            margin-bottom: 2rem;
-          }
-          .answer-option {
-            padding: 1.5rem;
-            background: rgba(255, 255, 255, 0.05);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-          }
-          .answer-option:hover {
-            background: rgba(59, 130, 246, 0.1);
-            border-color: #3b82f6;
-            transform: translateX(5px);
-          }
-          .answer-option.selected {
-            background: rgba(59, 130, 246, 0.2);
-            border-color: #3b82f6;
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
-          }
-          .option-letter {
-            width: 40px;
-            height: 40px;
-            background: rgba(59, 130, 246, 0.2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            flex-shrink: 0;
-          }
-          .option-text {
-            flex: 1;
-          }
-          .next-btn {
-            width: 100%;
-            padding: 1.2rem;
-            background: linear-gradient(45deg, #10b981, #059669);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-          }
-          .next-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
-          }
-          .next-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-          }
-        `}</style>
       </div>
     );
   }
 
+  // Quiz list
   return (
-    <div className="quiz-page">
-      <div className="quiz-list-header">
-        <button onClick={() => nav(-1)} className="back-btn">← Back</button>
-        <h1>📝 Phishing Quizzes</h1>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#0f172a,#1e293b)', color: 'white', padding: '2rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+        <button onClick={() => nav(isAdmin ? "/admin" : isGuest ? "/" : "/home")} style={{ padding: '0.75rem 1.5rem', background: 'linear-gradient(45deg,#3b82f6,#1d4ed8)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>← Back</button>
+        <h1 style={{ margin: 0 }}>📝 Phishing Quizzes</h1>
+        {isAdmin && <button onClick={() => nav("/admin/manage-quiz")} style={{ padding: '0.75rem 1.5rem', background: 'linear-gradient(45deg,#8b5cf6,#7c3aed)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>⚙️ Manage Quiz</button>}
       </div>
-      <div className="quiz-list">
-        {quizzes.map((quiz, idx) => (
-          <div key={idx} className="quiz-card" onClick={() => startQuiz(quiz)}>
-            <div className="quiz-icon">📝</div>
-            <h3>{quiz.title}</h3>
-            <p>{quiz.description}</p>
-            <div className="quiz-meta">
-              <span>📊 {quiz.questions?.length || 20} Questions</span>
-              <span>⚠️ Pass: 80%</span>
-              {quiz.isDemo && <span className="demo-badge">DEMO</span>}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(320px,1fr))', gap: '1.5rem' }}>
+        {quizzes.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '3rem', gridColumn: '1/-1', opacity: 0.6 }}><h3>No quizzes available yet</h3></div>
+        ) : quizzes.map(q => (
+          <div key={q._id} onClick={() => startQuiz(q)}
+            style={{ background: 'rgba(31,41,55,0.8)', padding: '1.5rem', borderRadius: '16px', cursor: 'pointer', border: '1px solid rgba(59,130,246,0.2)', transition: 'transform 0.2s', position: 'relative' }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
+            {isAdmin && <span style={{ position: 'absolute', top: '1rem', right: '1rem', background: q.status === 'waiting' ? '#f59e0b' : '#10b981', color: 'white', padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600 }}>{q.status === 'waiting' ? '⏳ Waiting' : '✅ Active'}</span>}
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📝</div>
+            <h3 style={{ margin: '0 0 0.5rem' }}>{q.title}</h3>
+            <p style={{ opacity: 0.7, margin: '0 0 1rem', fontSize: '0.9rem' }}>{q.description}</p>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', fontSize: '0.8rem' }}>
+              <span style={{ background: 'rgba(59,130,246,0.2)', padding: '0.2rem 0.6rem', borderRadius: '8px' }}>📊 {q.questions?.length || 0} Questions</span>
+              <span style={{ background: 'rgba(245,158,11,0.2)', padding: '0.2rem 0.6rem', borderRadius: '8px' }}>⚠️ Pass: 80%</span>
+              {q.isDemo && <span style={{ background: '#f59e0b', padding: '0.2rem 0.6rem', borderRadius: '8px' }}>DEMO</span>}
             </div>
           </div>
         ))}
       </div>
-      <style jsx>{`
-        .quiz-page {
-          min-height: 100vh;
-          background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-          color: white;
-          padding: 2rem;
-        }
-        .quiz-list-header {
-          display: flex;
-          align-items: center;
-          gap: 2rem;
-          margin-bottom: 2rem;
-        }
-        .back-btn {
-          padding: 0.75rem 1.5rem;
-          background: linear-gradient(45deg, #3b82f6, #1d4ed8);
-          color: white;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-          font-weight: 600;
-        }
-        .quiz-list {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-          gap: 2rem;
-        }
-        .quiz-card {
-          background: rgba(31, 41, 55, 0.8);
-          padding: 2rem;
-          border-radius: 16px;
-          cursor: pointer;
-          transition: transform 0.3s ease;
-          border: 1px solid rgba(59, 130, 246, 0.2);
-        }
-        .quiz-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 12px 30px rgba(59, 130, 246, 0.3);
-        }
-        .quiz-icon {
-          font-size: 3rem;
-          margin-bottom: 1rem;
-        }
-        .quiz-meta {
-          display: flex;
-          gap: 1rem;
-          margin-top: 1rem;
-          flex-wrap: wrap;
-          font-size: 0.9rem;
-        }
-        .demo-badge {
-          background: #f59e0b;
-          padding: 0.25rem 0.5rem;
-          border-radius: 4px;
-          font-size: 0.8rem;
-        }
-      `}</style>
     </div>
   );
 }
