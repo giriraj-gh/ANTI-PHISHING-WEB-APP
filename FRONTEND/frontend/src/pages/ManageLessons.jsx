@@ -134,7 +134,10 @@ export default function ManageLessons() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {lessons.map(lesson => (
-            <div key={lesson._id} style={{ background: 'rgba(31,41,55,0.8)', padding: '1.5rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap', border: '1px solid rgba(139,92,246,0.2)' }}>
+            <div key={lesson._id} onClick={() => setViewLesson(lesson)}
+              style={{ background: 'rgba(31,41,55,0.8)', padding: '1.5rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap', border: '1px solid rgba(139,92,246,0.2)', cursor: 'pointer', transition: 'all 0.2s' }}
+              onMouseEnter={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.borderColor='#8b5cf6'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.borderColor='rgba(139,92,246,0.2)'; }}>
               <span style={{ fontSize: '2.5rem' }}>{lesson.icon}</span>
               <div style={{ flex: 1 }}>
                 <h3 style={{ margin: '0 0 0.25rem' }}>{lesson.title}</h3>
@@ -145,8 +148,7 @@ export default function ManageLessons() {
                   {lesson.isFree && <span style={{ background: 'rgba(16,185,129,0.2)', color: '#6ee7b7', padding: '0.2rem 0.6rem', borderRadius: '8px', fontSize: '0.8rem' }}>FREE</span>}
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                <button onClick={() => setViewLesson(lesson)} style={{ padding: '0.5rem 1rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>👁️ View</button>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
                 <button onClick={() => editLesson(lesson)} style={{ padding: '0.5rem 1rem', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>✏️ Edit</button>
                 <button onClick={() => deleteLesson(lesson._id)} style={{ padding: '0.5rem 1rem', background: '#dc2626', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>🗑️ Delete</button>
               </div>

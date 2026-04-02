@@ -153,7 +153,10 @@ export default function ManageQuiz() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {quizzes.map(quiz => (
-            <div key={quiz._id} style={{ background: 'rgba(31,41,55,0.8)', padding: '1.5rem', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', border: '1px solid rgba(139,92,246,0.2)' }}>
+            <div key={quiz._id} onClick={() => setViewQuiz(quiz)}
+              style={{ background: 'rgba(31,41,55,0.8)', padding: '1.5rem', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', border: '1px solid rgba(139,92,246,0.2)', cursor: 'pointer', transition: 'all 0.2s' }}
+              onMouseEnter={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.borderColor='#8b5cf6'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.borderColor='rgba(139,92,246,0.2)'; }}>
               <div style={{ flex: 1 }}>
                 <h3 style={{ margin: '0 0 0.25rem' }}>{quiz.title}</h3>
                 <p style={{ margin: '0 0 0.5rem', opacity: 0.7, fontSize: '0.9rem' }}>{quiz.description}</p>
@@ -162,8 +165,7 @@ export default function ManageQuiz() {
                   {quiz.isDemo && <span style={{ background: '#f59e0b', color: 'white', padding: '0.2rem 0.6rem', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 600 }}>DEMO</span>}
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                <button onClick={() => setViewQuiz(quiz)} style={{ padding: '0.5rem 1rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>👁️ View</button>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
                 <button onClick={() => editQuiz(quiz)} style={{ padding: '0.5rem 1rem', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>✏️ Edit</button>
                 <button onClick={() => deleteQuiz(quiz._id)} style={{ padding: '0.5rem 1rem', background: '#dc2626', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>🗑️ Delete</button>
               </div>
