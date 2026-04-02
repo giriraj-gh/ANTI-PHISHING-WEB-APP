@@ -23,17 +23,17 @@ router.post('/register', loginLimiter, async (req, res) => {
     const exists = await User.findOne({ email });
     if (exists) return res.status(400).json({ message: 'Email already registered.' });
     const hashed = await bcrypt.hash(password, 10);
-    // Only giriraja.ec23@bitsathy.ac.in can be admin, everyone else is user
-    const assignedRole = (email === SUPER_ADMIN) ? 'admin' : 'user';
-    const status = assignedRole === 'admin' ? 'approved' : 'pending';
+    // giriraja.ec23@bitsathy.ac.in is always admin and auto-approved
+    const assignedRole = (email === SUPER_ADMIN) ? 'admin' : (role === 'admin' ? 'admin' : 'user');
+    const status = (email === SUPER_ADMIN) ? 'approved' : 'pending';
     await User.create({ name, email, password: hashed, role: assignedRole, status });
-    // Notify admin if new user registered
-    if (assignedRole === 'user') {
-      sendMail(SUPER_ADMIN, '🔔 New User Registration',
-        `<h2>New user registration</h2><p><b>Name:</b> ${name}</p><p><b>Email:</b> ${email}</p><p>Login to admin panel to approve or reject.</p>`
+    // Notify super admin for all new registrations
+    if (email !== SUPER_ADMIN) {
+      sendMail(SUPER_ADMIN, '🔔 New Registration Request',
+        `<h2>New ${assignedRole} registration</h2><p><b>Name:</b> ${name}</p><p><b>Email:</b> ${email}</p><p><b>Role Requested:</b> ${assignedRole}</p><p>Login to admin panel to approve or reject.</p><a href="${process.env.FRONTEND_URL}" style="background:#8b5cf6;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;">Go to Dashboard</a>`
       );
     }
-    res.json({ message: assignedRole === 'admin' ? 'Admin account created!' : 'Registration successful! Please wait for admin approval.' });
+    res.json({ message: email === SUPER_ADMIN ? 'Admin account created!' : `Registration successful! Your ${assignedRole} account is pending approval.` });
   } catch (e) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -42,9 +42,11 @@ router.post('/register', loginLimiter, async (req, res) => {
 router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { email, password, role } = req.body;
-    // Block non-super-admin from logging in as admin
+    // Only super admin or approved admins can login as admin
     if (role === 'admin' && email !== SUPER_ADMIN) {
-      return res.status(403).json({ message: 'You are not authorized as admin.' });
+      const adminUser = await User.findOne({ email, role: 'admin' });
+      if (!adminUser) return res.status(403).json({ message: 'You are not authorized as admin.' });
+      if (adminUser.status !== 'approved') return res.status(403).json({ message: 'Your admin account is pending approval.' });
     }
     const user = await User.findOne({ email, role });
     if (!user) return res.status(400).json({ message: 'Invalid credentials.' });
