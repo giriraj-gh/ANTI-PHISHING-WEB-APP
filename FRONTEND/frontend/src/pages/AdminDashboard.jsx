@@ -40,14 +40,18 @@ export default function AdminDashboard() {
         fetch(`${API}/api/admin/login-stats`, { headers }),
         fetch(`${API}/api/admin/admins`, { headers })
       ]);
-      setUsers(await usersRes.json());
-      setPendingUsers(await pendingRes.json());
-      setStats(await statsRes.json());
-      setTrendData(await trendsRes.json());
-      setNotifications((await notifRes.json()).pendingCount);
-      setAdminRequests(await adminReqRes.json());
-      setLoginStats(await loginStatsRes.json());
-      setAdminsList(await adminsRes.json());
+      const [usersData, pendingData, statsData, trendsData, notifData, adminReqData, loginStatsData, adminsData] = await Promise.all([
+        usersRes.json(), pendingRes.json(), statsRes.json(), trendsRes.json(),
+        notifRes.json(), adminReqRes.json(), loginStatsRes.json(), adminsRes.json()
+      ]);
+      setUsers(Array.isArray(usersData) ? usersData : []);
+      setPendingUsers(Array.isArray(pendingData) ? pendingData : []);
+      setStats(statsData || { high: 0, medium: 0, low: 0 });
+      setTrendData(Array.isArray(trendsData) ? trendsData : []);
+      setNotifications(notifData?.pendingCount || 0);
+      setAdminRequests(Array.isArray(adminReqData) ? adminReqData : []);
+      setLoginStats(loginStatsData || { totalLogins: 0, recentLogins: [], onlineCount: 0 });
+      setAdminsList(Array.isArray(adminsData) ? adminsData : []);
       const profileRes = await fetch(`${API}/api/auth/profile`, { headers });
       const profileData = await profileRes.json();
       setAdmin(profileData);
@@ -182,6 +186,9 @@ export default function AdminDashboard() {
           </LineChart>
         </ResponsiveContainer>
       </div>
+
+      {/* Low Risk URLs Table */}
+      <LowRiskTable API={process.env.REACT_APP_API_URL || 'http://localhost:5000'} token={localStorage.getItem('token')} cardBg={cardBg} borderColor={borderColor} />
 
       {/* Admin Role Requests - Super Admin Only */}
       {isSuperAdmin && adminRequests.length > 0 && (
@@ -338,6 +345,42 @@ function UserSearchHistory({ API, token }) {
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function LowRiskTable({ API, token, cardBg, borderColor }) {
+  const [logs, setLogs] = React.useState([]);
+  React.useEffect(() => {
+    fetch(`${API}/api/admin/scans/low`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json()).then(data => setLogs(Array.isArray(data) ? data : [])).catch(() => {});
+  }, [API, token]);
+  return (
+    <div style={{ background: cardBg, padding: '1.5rem', borderRadius: '16px', border: `1px solid ${borderColor}`, marginBottom: '2rem' }}>
+      <h3 style={{ margin: '0 0 1rem', color: '#10b981' }}>✅ Low Risk URL Scans ({logs.length})</h3>
+      {logs.length === 0 ? <p style={{ opacity: 0.6, textAlign: 'center', padding: '1rem' }}>No low risk scans yet</p> : (
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ background: 'rgba(16,185,129,0.2)' }}>
+                {['User', 'URL', 'Score', 'Date'].map(h => (
+                  <th key={h} style={{ padding: '0.75rem 1rem', textAlign: 'left', color: '#6ee7b7', fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {logs.map((s, i) => (
+                <tr key={i} style={{ borderTop: '1px solid rgba(16,185,129,0.1)' }}>
+                  <td style={{ padding: '0.75rem 1rem', fontWeight: 600 }}>👤 {s.userName || 'Unknown'}</td>
+                  <td style={{ padding: '0.75rem 1rem', fontFamily: 'monospace', fontSize: '0.85rem', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.url}</td>
+                  <td style={{ padding: '0.75rem 1rem', color: '#10b981', fontWeight: 700 }}>{s.score}/100</td>
+                  <td style={{ padding: '0.75rem 1rem', opacity: 0.7, whiteSpace: 'nowrap' }}>{new Date(s.createdAt).toLocaleDateString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

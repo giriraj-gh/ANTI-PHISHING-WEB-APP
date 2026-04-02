@@ -14,7 +14,7 @@ router.get('/all', async (req, res) => {
 router.post('/create', auth, async (req, res) => {
   const Lesson = require('../models/Lesson');
   try {
-    const lesson = await Lesson.create({ ...req.body, status: 'active' });
+    const lesson = await Lesson.create(req.body);
     res.json(lesson);
   } catch (e) {
     res.status(500).json({ message: 'Server error' });

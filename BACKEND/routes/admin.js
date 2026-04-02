@@ -91,11 +91,19 @@ router.delete('/delete-user/:id', auth, async (req, res) => {
 
 router.get('/stats', auth, async (req, res) => {
   try {
-    const logs = await ScanLog.find();
-    const high = logs.filter(s => s.risk === 'HIGH').length;
-    const medium = logs.filter(s => s.risk === 'MEDIUM').length;
-    const low = logs.filter(s => s.risk === 'LOW').length;
+    const high = await ScanLog.countDocuments({ risk: 'HIGH' });
+    const medium = await ScanLog.countDocuments({ risk: 'MEDIUM' });
+    const low = await ScanLog.countDocuments({ risk: 'LOW' });
     res.json({ high, medium, low });
+  } catch (e) { res.status(500).json({ message: 'Server error' }); }
+});
+
+// Get scan logs by risk level
+router.get('/scans/:risk', auth, async (req, res) => {
+  try {
+    const risk = req.params.risk.toUpperCase();
+    const logs = await ScanLog.find({ risk }).sort({ createdAt: -1 }).limit(20);
+    res.json(logs);
   } catch (e) { res.status(500).json({ message: 'Server error' }); }
 });
 
