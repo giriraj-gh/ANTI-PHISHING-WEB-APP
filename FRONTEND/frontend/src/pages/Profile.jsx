@@ -47,9 +47,17 @@ export default function Profile() {
     setLoading(true);
     try {
       await api.put("/auth/profile", form);
-      const updated = { ...JSON.parse(localStorage.getItem("user") || '{}'), name: form.name, profilePicture: form.profilePicture };
+      // Update localStorage with latest data
+      const updated = { 
+        ...JSON.parse(localStorage.getItem("user") || '{}'), 
+        name: form.name, 
+        profilePicture: form.profilePicture,
+        dob: form.dob,
+        age: form.age,
+        bio: form.bio
+      };
       localStorage.setItem("user", JSON.stringify(updated));
-      alert("Profile Updated Successfully!");
+      alert("✅ Profile Updated Successfully!");
     } catch (e) {
       alert("Error updating profile");
     }

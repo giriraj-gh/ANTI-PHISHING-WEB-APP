@@ -13,7 +13,7 @@ export default function AdminDashboard() {
   const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'true');
   const [notifications, setNotifications] = useState(0);
   const [adminRequests, setAdminRequests] = useState([]);
-  const [loginStats, setLoginStats] = useState({ totalLogins: 0, recentLogins: [], onlineCount: 0 });
+  const [loginStats, setLoginStats] = useState({ totalLogins: 0, recentLogins: [] });
   const [adminsList, setAdminsList] = useState([]);
 
   const chartData = [
@@ -50,7 +50,7 @@ export default function AdminDashboard() {
       setTrendData(Array.isArray(trendsData) ? trendsData : []);
       setNotifications(notifData?.pendingCount || 0);
       setAdminRequests(Array.isArray(adminReqData) ? adminReqData : []);
-      setLoginStats(loginStatsData || { totalLogins: 0, recentLogins: [], onlineCount: 0 });
+      setLoginStats(loginStatsData || { totalLogins: 0, recentLogins: [] });
       setAdminsList(Array.isArray(adminsData) ? adminsData : []);
       const profileRes = await fetch(`${API}/api/auth/profile`, { headers });
       const profileData = await profileRes.json();
