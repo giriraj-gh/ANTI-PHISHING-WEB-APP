@@ -209,11 +209,12 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Admin List - visible to all admins, delete only for super admin */}
+      {/* Admin List - always visible to super admin */}
+      {isSuperAdmin && (
       <div style={{ background: cardBg, padding: '1.5rem', borderRadius: '16px', border: `2px solid #8b5cf6`, marginBottom: '2rem' }}>
         <h3 style={{ margin: '0 0 1rem', color: '#8b5cf6' }}>👨💼 Admin List ({adminsList.length})</h3>
         {adminsList.length === 0 ? (
-          <p style={{ opacity: 0.6, textAlign: 'center', padding: '1rem' }}>No other admins yet. Approve admin requests to see them here.</p>
+          <p style={{ opacity: 0.6, textAlign: 'center', padding: '1rem' }}>No other admins yet.</p>
         ) : adminsList.map(a => (
           <div key={a._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'rgba(139,92,246,0.1)', borderRadius: '8px', borderLeft: '4px solid #8b5cf6', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.75rem' }}>
             <div>
@@ -221,12 +222,11 @@ export default function AdminDashboard() {
               <div style={{ opacity: 0.7, fontSize: '0.9rem' }}>{a.email}</div>
               <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>Joined: {new Date(a.createdAt).toLocaleDateString()} • <span style={{ color: '#10b981' }}>✅ Admin</span></div>
             </div>
-            {isSuperAdmin && (
-              <button onClick={() => handleDelete(a._id)} style={{ padding: '0.5rem 1rem', background: '#dc2626', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>🗑️ Delete Admin</button>
-            )}
+            <button onClick={() => handleDelete(a._id)} style={{ padding: '0.5rem 1rem', background: '#dc2626', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>🗑️ Delete Admin</button>
           </div>
         ))}
       </div>
+      )}
 
       {/* Pending Users with Bulk Actions - Super Admin Only */}
       {isSuperAdmin && (
