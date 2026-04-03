@@ -169,7 +169,7 @@ export default function Quiz() {
             style={{ background: 'rgba(31,41,55,0.8)', padding: '1.5rem', borderRadius: '16px', cursor: 'pointer', border: '1px solid rgba(59,130,246,0.2)', transition: 'transform 0.2s', position: 'relative' }}
             onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'}
             onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
-            {isAdmin && <span style={{ position: 'absolute', top: '1rem', right: '1rem', background: q.status === 'waiting' ? '#f59e0b' : '#10b981', color: 'white', padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600 }}>{q.status === 'waiting' ? '⏳ Waiting' : '✅ Active'}</span>}
+            {isAdmin && quiz.status === 'waiting' && <span style={{ position: 'absolute', top: '1rem', right: '1rem', background: '#f59e0b', color: 'white', padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600 }}>⏳ Waiting</span>}
             <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📝</div>
             <h3 style={{ margin: '0 0 0.5rem' }}>{q.title}</h3>
             <p style={{ opacity: 0.7, margin: '0 0 1rem', fontSize: '0.9rem' }}>{q.description}</p>

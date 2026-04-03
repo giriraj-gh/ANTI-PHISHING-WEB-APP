@@ -223,4 +223,15 @@ router.get('/reseed', async (req, res) => {
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
 
+// Fix all existing lessons and quizzes to active status
+router.get('/fix-status', async (req, res) => {
+  try {
+    const Lesson = require('../models/Lesson');
+    const Quiz = require('../models/Quiz');
+    await Lesson.updateMany({}, { status: 'active' });
+    await Quiz.updateMany({}, { status: 'active' });
+    res.json({ message: '✅ All lessons and quizzes set to active!' });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
 module.exports = router;
