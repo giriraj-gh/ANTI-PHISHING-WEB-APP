@@ -57,9 +57,17 @@ export default function Login() {
       <div className="login-container">
         <div className="login-card">
           <div className="card-header">
-            <div className="logo-container">
-              <div className="logo-icon">🛡️</div>
-              <div className="logo-pulse"></div>
+            {/* Banner Image */}
+            <div className="banner-image">
+              <div className="banner-content">
+                <div className="banner-icons">
+                  <span className="b-icon">🛡️</span>
+                  <span className="b-icon">🔍</span>
+                  <span className="b-icon">🔒</span>
+                </div>
+                <div className="banner-text">ANTI-PHISHING PROTECTION</div>
+                <div className="banner-sub">Detect • Protect • Educate</div>
+              </div>
             </div>
             <h1 className="app-title">Anti-Phishing App</h1>
             <p className="app-subtitle">Advanced Threat Detection & Protection Platform</p>
@@ -317,35 +325,86 @@ export default function Login() {
           margin-bottom: 2rem;
         }
 
-        .logo-container {
+        .banner-image {
+          width: 100%;
+          height: 140px;
+          background: linear-gradient(135deg, #0f172a 0%, #1e293b 40%, #312e81 70%, #1e1b4b 100%);
+          border-radius: 16px;
+          margin-bottom: 1.5rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           position: relative;
-          display: inline-block;
-          margin-bottom: 1rem;
+          overflow: hidden;
+          border: 1px solid rgba(139,92,246,0.3);
+          box-shadow: 0 8px 32px rgba(59,130,246,0.2);
         }
 
-        .logo-icon {
-          font-size: 4rem;
-          position: relative;
-          z-index: 2;
-        }
-
-        .logo-pulse {
+        .banner-image::before {
+          content: '';
           position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 80px;
-          height: 80px;
-          background: linear-gradient(45deg, #3b82f6, #8b5cf6);
-          border-radius: 50%;
-          opacity: 0.2;
-          animation: pulse 2s infinite;
+          width: 200px;
+          height: 200px;
+          background: radial-gradient(circle, rgba(59,130,246,0.3) 0%, transparent 70%);
+          top: -50px;
+          left: -50px;
+          animation: pulse-bg 3s ease-in-out infinite;
         }
 
-        @keyframes pulse {
-          0% { transform: translate(-50%, -50%) scale(1); opacity: 0.2; }
-          50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.1; }
-          100% { transform: translate(-50%, -50%) scale(1); opacity: 0.2; }
+        .banner-image::after {
+          content: '';
+          position: absolute;
+          width: 150px;
+          height: 150px;
+          background: radial-gradient(circle, rgba(139,92,246,0.3) 0%, transparent 70%);
+          bottom: -30px;
+          right: -30px;
+          animation: pulse-bg 3s ease-in-out infinite 1.5s;
+        }
+
+        @keyframes pulse-bg {
+          0%, 100% { transform: scale(1); opacity: 0.5; }
+          50% { transform: scale(1.2); opacity: 1; }
+        }
+
+        .banner-content {
+          text-align: center;
+          z-index: 1;
+        }
+
+        .banner-icons {
+          display: flex;
+          gap: 1rem;
+          justify-content: center;
+          margin-bottom: 0.5rem;
+        }
+
+        .b-icon {
+          font-size: 2rem;
+          animation: float-icon 2s ease-in-out infinite;
+        }
+
+        .b-icon:nth-child(2) { animation-delay: 0.3s; }
+        .b-icon:nth-child(3) { animation-delay: 0.6s; }
+
+        @keyframes float-icon {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-6px); }
+        }
+
+        .banner-text {
+          color: white;
+          font-size: 1rem;
+          font-weight: 700;
+          letter-spacing: 2px;
+          text-shadow: 0 0 20px rgba(59,130,246,0.8);
+        }
+
+        .banner-sub {
+          color: rgba(255,255,255,0.6);
+          font-size: 0.75rem;
+          letter-spacing: 1px;
+          margin-top: 0.25rem;
         }
 
         .app-title {
