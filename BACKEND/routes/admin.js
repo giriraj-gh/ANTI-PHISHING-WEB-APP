@@ -228,7 +228,101 @@ router.get('/reseed', async (req, res) => {
     for (const q of quizData) {
       await Quiz.create(q);
     }
-    res.json({ message: '✅ 10 lessons and 5 quizzes with real questions seeded successfully!' });
+      { title: 'Malware Awareness Quiz', description: 'Test your knowledge on malware and ransomware', isDemo: false, status: 'active',
+        questions: [
+          { question: 'What is ransomware?', options: ['Malware that encrypts files and demands payment', 'A type of antivirus', 'A firewall software', 'A browser extension'], correctAnswer: 'Malware that encrypts files and demands payment' },
+          { question: 'How does malware usually enter a system?', options: ['Through malicious email attachments', 'Through HTTPS websites', 'Through strong passwords', 'Through VPN connections'], correctAnswer: 'Through malicious email attachments' },
+          { question: 'What is a trojan horse in cybersecurity?', options: ['Malware disguised as legitimate software', 'A type of firewall', 'An antivirus program', 'A secure browser'], correctAnswer: 'Malware disguised as legitimate software' },
+          { question: 'Best protection against ransomware?', options: ['Regular data backups', 'Using public WiFi', 'Disabling antivirus', 'Opening all email attachments'], correctAnswer: 'Regular data backups' },
+          { question: 'What should you do if your system is infected with malware?', options: ['Disconnect from internet and run antivirus', 'Continue using normally', 'Share files with others', 'Ignore it'], correctAnswer: 'Disconnect from internet and run antivirus' }
+        ]
+      },
+      { title: 'Wi-Fi Security Quiz', description: 'Test your knowledge on wireless network security', isDemo: false, status: 'active',
+        questions: [
+          { question: 'What is a man-in-the-middle attack on WiFi?', options: ['Attacker intercepts communication between two parties', 'A type of password attack', 'A firewall bypass', 'A DNS attack'], correctAnswer: 'Attacker intercepts communication between two parties' },
+          { question: 'What should you use on public WiFi?', options: ['A VPN', 'No protection needed', 'Public DNS', 'HTTP websites'], correctAnswer: 'A VPN' },
+          { question: 'What is a rogue access point?', options: ['A fake WiFi hotspot set up by attackers', 'A secure router', 'A VPN server', 'A firewall device'], correctAnswer: 'A fake WiFi hotspot set up by attackers' },
+          { question: 'Which WiFi encryption is most secure?', options: ['WPA3', 'WEP', 'WPA', 'No encryption'], correctAnswer: 'WPA3' },
+          { question: 'Should you auto-connect to known WiFi networks?', options: ['No, disable auto-connect', 'Yes always', 'Only at home', 'Only for work networks'], correctAnswer: 'No, disable auto-connect' }
+        ]
+      },
+      { title: 'Safe Online Shopping Quiz', description: 'Test your online shopping security knowledge', isDemo: false, status: 'active',
+        questions: [
+          { question: 'What should you check before entering payment details online?', options: ['HTTPS and padlock icon', 'Website color scheme', 'Number of products', 'Page loading speed'], correctAnswer: 'HTTPS and padlock icon' },
+          { question: 'Which payment method is safer for online shopping?', options: ['Credit card with fraud protection', 'Debit card', 'Bank transfer', 'Cash on delivery only'], correctAnswer: 'Credit card with fraud protection' },
+          { question: 'What is a fake online store?', options: ['A fraudulent website mimicking a real store', 'A store with low prices', 'A store without reviews', 'A new online store'], correctAnswer: 'A fraudulent website mimicking a real store' },
+          { question: 'How to verify an online seller is legitimate?', options: ['Check reviews and verify contact details', 'Just buy and hope for the best', 'Trust all websites equally', 'Only check the price'], correctAnswer: 'Check reviews and verify contact details' },
+          { question: 'What should you do after online shopping on public WiFi?', options: ['Change your passwords immediately', 'Nothing extra needed', 'Delete your browser', 'Restart your device'], correctAnswer: 'Change your passwords immediately' }
+        ]
+      },
+      { title: 'Two-Factor Authentication Quiz', description: 'Test your 2FA knowledge', isDemo: true, status: 'active',
+        questions: [
+          { question: 'What does 2FA stand for?', options: ['Two-Factor Authentication', 'Two-File Access', 'Two-Form Authorization', 'Two-Factor Application'], correctAnswer: 'Two-Factor Authentication' },
+          { question: 'Which 2FA method is most secure?', options: ['Hardware security key', 'SMS code', 'Email code', 'Security questions'], correctAnswer: 'Hardware security key' },
+          { question: 'What is an authenticator app?', options: ['App that generates time-based one-time passwords', 'A password manager', 'An antivirus app', 'A VPN app'], correctAnswer: 'App that generates time-based one-time passwords' },
+          { question: 'Should you share your 2FA code with anyone?', options: ['Never share it with anyone', 'Share with trusted friends', 'Share with IT support', 'Share if asked politely'], correctAnswer: 'Never share it with anyone' },
+          { question: 'What happens if you lose your 2FA device?', options: ['Use backup codes to recover access', 'Account is permanently lost', 'Password alone is enough', 'Contact the attacker'], correctAnswer: 'Use backup codes to recover access' }
+        ]
+      },
+      { title: 'Spear Phishing Quiz', description: 'Test your knowledge on targeted phishing attacks', isDemo: false, status: 'active',
+        questions: [
+          { question: 'What makes spear phishing different from regular phishing?', options: ['It targets specific individuals using personal info', 'It uses more emails', 'It targets random people', 'It only attacks companies'], correctAnswer: 'It targets specific individuals using personal info' },
+          { question: 'Where do spear phishers get personal information?', options: ['Social media and public profiles', 'Dark web only', 'Phone books', 'Random guessing'], correctAnswer: 'Social media and public profiles' },
+          { question: 'What is whaling in cybersecurity?', options: ['Spear phishing targeting high-level executives', 'Attacking large companies', 'A type of malware', 'A network attack'], correctAnswer: 'Spear phishing targeting high-level executives' },
+          { question: 'How to protect against spear phishing?', options: ['Verify requests through official channels', 'Trust all personalized emails', 'Share personal info freely', 'Ignore security training'], correctAnswer: 'Verify requests through official channels' },
+          { question: 'A spear phishing email usually contains:', options: ['Your name and personal details to seem legitimate', 'Generic greetings only', 'Obvious spelling errors', 'No links or attachments'], correctAnswer: 'Your name and personal details to seem legitimate' }
+        ]
+      },
+      { title: 'Data Privacy Quiz', description: 'Test your understanding of data privacy and protection', isDemo: false, status: 'active',
+        questions: [
+          { question: 'What is personally identifiable information (PII)?', options: ['Data that can identify a specific individual', 'Public company data', 'Website traffic data', 'Anonymous survey data'], correctAnswer: 'Data that can identify a specific individual' },
+          { question: 'What is GDPR?', options: ['European data protection regulation', 'A type of malware', 'A firewall standard', 'An email protocol'], correctAnswer: 'European data protection regulation' },
+          { question: 'How should you handle sensitive data?', options: ['Encrypt and limit access', 'Share freely with colleagues', 'Store in plain text', 'Email to everyone'], correctAnswer: 'Encrypt and limit access' },
+          { question: 'What is a data breach?', options: ['Unauthorized access to confidential data', 'A system update', 'A backup process', 'A security audit'], correctAnswer: 'Unauthorized access to confidential data' },
+          { question: 'What should you do if you suspect a data breach?', options: ['Report immediately to security team', 'Ignore it', 'Delete all files', 'Tell only friends'], correctAnswer: 'Report immediately to security team' }
+        ]
+      },
+      { title: 'Browser Security Quiz', description: 'Test your web browser security knowledge', isDemo: false, status: 'active',
+        questions: [
+          { question: 'What does a browser warning about an invalid certificate mean?', options: ['The site may be unsafe or impersonating another', 'The site is loading slowly', 'Your internet is slow', 'The browser needs updating'], correctAnswer: 'The site may be unsafe or impersonating another' },
+          { question: 'What are browser cookies?', options: ['Small files storing website data on your device', 'Malware files', 'Browser extensions', 'Cached images'], correctAnswer: 'Small files storing website data on your device' },
+          { question: 'Why should you keep your browser updated?', options: ['To patch security vulnerabilities', 'For better graphics', 'To use more RAM', 'To slow down browsing'], correctAnswer: 'To patch security vulnerabilities' },
+          { question: 'What is a browser extension risk?', options: ['Malicious extensions can steal data', 'Extensions make browsers faster', 'Extensions block all ads', 'Extensions improve security always'], correctAnswer: 'Malicious extensions can steal data' },
+          { question: 'What is private/incognito browsing?', options: ['Browsing without saving local history', 'Completely anonymous browsing', 'Encrypted browsing', 'VPN browsing'], correctAnswer: 'Browsing without saving local history' }
+        ]
+      },
+      { title: 'Incident Response Quiz', description: 'Test your knowledge on responding to cyber incidents', isDemo: false, status: 'active',
+        questions: [
+          { question: 'What is the first step when you suspect a phishing attack?', options: ['Do not click any links and report it', 'Click links to verify', 'Forward to colleagues', 'Delete your account'], correctAnswer: 'Do not click any links and report it' },
+          { question: 'What should you do if you accidentally clicked a phishing link?', options: ['Disconnect from internet and change passwords', 'Continue browsing normally', 'Restart your browser only', 'Wait and see what happens'], correctAnswer: 'Disconnect from internet and change passwords' },
+          { question: 'Who should you report a phishing attempt to?', options: ['IT security team and the impersonated organization', 'Only your friends', 'No one', 'The attacker'], correctAnswer: 'IT security team and the impersonated organization' },
+          { question: 'What is a security incident response plan?', options: ['A documented procedure for handling security breaches', 'A firewall configuration', 'An antivirus program', 'A password policy'], correctAnswer: 'A documented procedure for handling security breaches' },
+          { question: 'After a phishing incident, what is most important?', options: ['Learn from it and improve security awareness', 'Blame the victim', 'Ignore future emails', 'Disable all email'], correctAnswer: 'Learn from it and improve security awareness' }
+        ]
+      },
+      { title: 'Advanced Threats Quiz', description: 'Test your knowledge on advanced cyber threats', isDemo: false, status: 'active',
+        questions: [
+          { question: 'What is a zero-day vulnerability?', options: ['An unknown flaw with no available patch', 'A day with no cyber attacks', 'A new software release', 'A type of firewall'], correctAnswer: 'An unknown flaw with no available patch' },
+          { question: 'What is an APT (Advanced Persistent Threat)?', options: ['A long-term targeted attack by sophisticated actors', 'A basic virus', 'A spam campaign', 'A DDoS attack'], correctAnswer: 'A long-term targeted attack by sophisticated actors' },
+          { question: 'What is DNS spoofing?', options: ['Redirecting users to fake websites via corrupted DNS', 'A type of email attack', 'A password attack', 'A WiFi attack'], correctAnswer: 'Redirecting users to fake websites via corrupted DNS' },
+          { question: 'What is a botnet?', options: ['A network of infected computers controlled by attackers', 'A secure network', 'A type of VPN', 'A firewall system'], correctAnswer: 'A network of infected computers controlled by attackers' },
+          { question: 'What is credential stuffing?', options: ['Using stolen credentials to access multiple accounts', 'Creating strong passwords', 'A type of 2FA', 'A backup method'], correctAnswer: 'Using stolen credentials to access multiple accounts' }
+        ]
+      },
+      { title: 'Cybersecurity Best Practices Quiz', description: 'Final comprehensive cybersecurity assessment', isDemo: false, status: 'active',
+        questions: [
+          { question: 'What is the most important cybersecurity habit?', options: ['Staying informed and practicing security awareness', 'Using the same password everywhere', 'Ignoring software updates', 'Disabling firewalls'], correctAnswer: 'Staying informed and practicing security awareness' },
+          { question: 'How often should you back up important data?', options: ['Regularly, following the 3-2-1 rule', 'Once a year', 'Never needed', 'Only when attacked'], correctAnswer: 'Regularly, following the 3-2-1 rule' },
+          { question: 'What is the principle of least privilege?', options: ['Give users only the access they need', 'Give all users admin access', 'Restrict all access', 'Share all passwords'], correctAnswer: 'Give users only the access they need' },
+          { question: 'What is security awareness training?', options: ['Educating users to recognize and respond to threats', 'Installing antivirus software', 'Configuring firewalls', 'Writing security policies'], correctAnswer: 'Educating users to recognize and respond to threats' },
+          { question: 'Which is the weakest link in cybersecurity?', options: ['Human behavior and social engineering', 'Outdated software', 'Weak firewalls', 'Slow internet'], correctAnswer: 'Human behavior and social engineering' }
+        ]
+      }
+    ];
+    for (const q of quizData) {
+      await Quiz.create(q);
+    }
+    res.json({ message: '✅ 10 lessons and 15 quizzes with real questions seeded successfully!' });
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
 
