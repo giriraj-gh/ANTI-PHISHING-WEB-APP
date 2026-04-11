@@ -1,9 +1,23 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const app = express();
+
+// Security headers
+app.use(helmet({ contentSecurityPolicy: false }));
+
+// Rate limiting
+const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100, message: 'Too many requests, please try again later.' });
+app.use('/api/', limiter);
+
+// Scan-specific rate limit
+const scanLimiter = rateLimit({ windowMs: 60 * 1000, max: 10, message: 'Too many scan requests, please wait.' });
+app.use('/api/phish/scan', scanLimiter);
+
 app.use(cors({
   origin: [process.env.FRONTEND_URL || 'http://localhost:3000', /\.vercel\.app$/, /\.onrender\.com$/],
   credentials: true
