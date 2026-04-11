@@ -16,7 +16,8 @@ export default function LearningDashboard() {
       api.get("/phish/all").catch(() => ({ data: [] }))
     ]).then(([resData, scanData]) => {
       setResults(Array.isArray(resData.data) ? resData.data : []);
-      setScans(Array.isArray(scanData.data) ? scanData.data : []);
+      const scanData2 = resData.data && resData.data.logs ? resData.data.logs : (Array.isArray(scanData.data) ? scanData.data : []);
+      setScans(Array.isArray(scanData.data) ? scanData.data : (scanData.data?.logs || []));
       setLoading(false);
     });
   }, []);
