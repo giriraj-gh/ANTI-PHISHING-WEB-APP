@@ -318,6 +318,7 @@ export default function Login() {
       `}</style>
 
       {/* Background */}
+      <div style={{minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', position:'relative', overflow:'hidden', background:'#060d1f', padding:'1.5rem'}}>
       <div className="blob blob-1" />
       <div className="blob blob-2" />
       <div className="blob blob-3" />
@@ -408,6 +409,7 @@ export default function Login() {
           <Link to="/forgot-password">Forgot password?</Link>
         </div>
 
+      </div>
       </div>
     </>
   );
