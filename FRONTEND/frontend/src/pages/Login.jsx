@@ -24,8 +24,9 @@ export default function Login() {
       if (res.data.role === "admin") { navigate("/admin"); } else { navigate("/home"); }
     } catch (err) {
       setError(err.response?.data?.message || "Invalid credentials. Please check your email and password.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
