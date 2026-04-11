@@ -83,7 +83,10 @@ router.put('/approve-user/:id', auth, async (req, res) => {
   try {
     const admin = await User.findById(req.user.id);
     if (admin.email !== SUPER_ADMIN) return res.status(403).json({ message: 'Not authorized.' });
-    const user = await User.findByIdAndUpdate(req.params.id, { status: 'approved' }, { new: true });
+    const user = await User.findByIdAndUpdate(req.params.id, {
+      status: 'approved',
+      $push: { notifications: { message: '✅ Your account has been approved! You can now login.', type: 'success' } }
+    }, { new: true });
     sendMail(user.email, '✅ Account Approved', `<h2>Hi ${user.name}, your account has been approved!</h2><a href="${process.env.FRONTEND_URL}" style="background:#10b981;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;">Login Now</a>`);
     res.json({ message: 'User approved' });
   } catch (e) { res.status(500).json({ message: 'Server error' }); }
@@ -93,7 +96,10 @@ router.put('/reject-user/:id', auth, async (req, res) => {
   try {
     const admin = await User.findById(req.user.id);
     if (admin.email !== SUPER_ADMIN) return res.status(403).json({ message: 'Not authorized.' });
-    const user = await User.findByIdAndUpdate(req.params.id, { status: 'rejected' }, { new: true });
+    const user = await User.findByIdAndUpdate(req.params.id, {
+      status: 'rejected',
+      $push: { notifications: { message: '❌ Your account registration has been rejected. Contact support for help.', type: 'warning' } }
+    }, { new: true });
     sendMail(user.email, '❌ Account Rejected', `<h2>Hi ${user.name}, your account registration has been rejected.</h2>`);
     res.json({ message: 'User rejected' });
   } catch (e) { res.status(500).json({ message: 'Server error' }); }

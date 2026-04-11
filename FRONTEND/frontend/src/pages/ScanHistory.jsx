@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 
@@ -8,9 +8,31 @@ export default function ScanHistory() {
   const [filtered, setFiltered] = useState([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("ALL");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const LIMIT = 20;
   const role = localStorage.getItem("role");
 
-  useEffect(() => { loadHistory(); }, []);
+  const loadHistory = useCallback(async (p = 1) => {
+    try {
+      const res = await api.get(`/phish/all?page=${p}&limit=${LIMIT}`);
+      // Handle both paginated and non-paginated response
+      if (res.data.logs) {
+        setHistory(res.data.logs);
+        setFiltered(res.data.logs);
+        setTotal(res.data.total);
+        setTotalPages(res.data.pages);
+      } else {
+        setHistory(res.data);
+        setFiltered(res.data);
+        setTotal(res.data.length);
+        setTotalPages(1);
+      }
+    } catch (e) { console.log(e); }
+  }, []);
+
+  useEffect(() => { loadHistory(page); }, [page, loadHistory]);
 
   useEffect(() => {
     let data = history;
@@ -21,14 +43,6 @@ export default function ScanHistory() {
     setFiltered(data);
   }, [search, filter, history]);
 
-  const loadHistory = async () => {
-    try {
-      const res = await api.get("/phish/all");
-      setHistory(res.data);
-      setFiltered(res.data);
-    } catch (e) { console.log(e); }
-  };
-
   const getRiskColor = (risk) => (risk === 'HIGH' || risk === 'Phishing') ? '#dc2626' : (risk === 'MEDIUM' || risk === 'Suspicious') ? '#f59e0b' : '#10b981';
   const getRiskIcon = (risk) => (risk === 'HIGH' || risk === 'Phishing') ? '🚨' : (risk === 'MEDIUM' || risk === 'Suspicious') ? '⚠️' : '✅';
   const getRiskLabel = (risk) => risk === 'Phishing' ? 'HIGH' : risk === 'Suspicious' ? 'MEDIUM' : risk === 'Safe' ? 'LOW' : risk;
@@ -36,6 +50,24 @@ export default function ScanHistory() {
   const highCount = history.filter(h => h.risk === 'HIGH' || h.risk === 'Phishing').length;
   const mediumCount = history.filter(h => h.risk === 'MEDIUM' || h.risk === 'Suspicious').length;
   const lowCount = history.filter(h => h.risk === 'LOW' || h.risk === 'Safe').length;
+
+  const exportCSV = () => {
+    const headers = ['#', 'URL', 'Risk', 'Score', 'User', 'Date'];
+    const rows = filtered.map((item, i) => [
+      i + 1,
+      `"${item.url}"`,
+      getRiskLabel(item.risk),
+      item.score,
+      item.userName || '-',
+      new Date(item.createdAt).toLocaleDateString()
+    ]);
+    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `scan-history-${Date.now()}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#1e1b4b,#312e81,#1e1b4b)', color: 'white', padding: '2rem' }}>
@@ -48,20 +80,24 @@ export default function ScanHistory() {
           📋 Scan History
         </h1>
         <span style={{ background: 'rgba(139,92,246,0.3)', padding: '0.25rem 0.75rem', borderRadius: '20px', fontSize: '0.9rem' }}>
-          {filtered.length} records
+          {total} total records
         </span>
+        <button onClick={exportCSV}
+          style={{ marginLeft: 'auto', padding: '0.6rem 1.25rem', background: 'linear-gradient(45deg,#10b981,#059669)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem' }}>
+          📥 Export CSV
+        </button>
       </div>
 
       {/* Count Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
         {[
-          { label: 'Total', count: history.length, color: '#8b5cf6', icon: '📋' },
-          { label: 'High Risk', count: highCount, color: '#dc2626', icon: '🚨' },
-          { label: 'Medium Risk', count: mediumCount, color: '#f59e0b', icon: '⚠️' },
-          { label: 'Low Risk', count: lowCount, color: '#10b981', icon: '✅' }
+          { label: 'Total', count: total, color: '#8b5cf6', icon: '📋', f: 'ALL' },
+          { label: 'High Risk', count: highCount, color: '#dc2626', icon: '🚨', f: 'HIGH' },
+          { label: 'Medium Risk', count: mediumCount, color: '#f59e0b', icon: '⚠️', f: 'MEDIUM' },
+          { label: 'Low Risk', count: lowCount, color: '#10b981', icon: '✅', f: 'LOW' }
         ].map(c => (
-          <div key={c.label} onClick={() => setFilter(c.label === 'Total' ? 'ALL' : c.label.split(' ')[0].toUpperCase())}
-            style={{ background: 'rgba(31,41,55,0.8)', padding: '1rem', borderRadius: '12px', border: `2px solid ${filter === (c.label === 'Total' ? 'ALL' : c.label.split(' ')[0].toUpperCase()) ? c.color : 'transparent'}`, borderLeft: `4px solid ${c.color}`, cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s' }}>
+          <div key={c.label} onClick={() => setFilter(c.f)}
+            style={{ background: 'rgba(31,41,55,0.8)', padding: '1rem', borderRadius: '12px', border: `2px solid ${filter === c.f ? c.color : 'transparent'}`, borderLeft: `4px solid ${c.color}`, cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s' }}>
             <div style={{ fontSize: '1.5rem' }}>{c.icon}</div>
             <div style={{ fontSize: '1.8rem', fontWeight: 700, color: c.color }}>{c.count}</div>
             <div style={{ fontSize: '0.85rem', opacity: 0.8 }}>{c.label}</div>
@@ -84,7 +120,7 @@ export default function ScanHistory() {
       </div>
 
       {/* Table */}
-      <div style={{ background: 'rgba(31,41,55,0.8)', borderRadius: '16px', border: '1px solid rgba(139,92,246,0.2)', overflow: 'hidden' }}>
+      <div style={{ background: 'rgba(31,41,55,0.8)', borderRadius: '16px', border: '1px solid rgba(139,92,246,0.2)', overflow: 'hidden', marginBottom: '1.5rem' }}>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
@@ -101,7 +137,7 @@ export default function ScanHistory() {
                 <tr key={item._id} style={{ borderTop: '1px solid rgba(139,92,246,0.1)', transition: 'background 0.2s' }}
                   onMouseEnter={e => e.currentTarget.style.background = 'rgba(139,92,246,0.1)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                  <td style={{ padding: '1rem', opacity: 0.6 }}>{i + 1}</td>
+                  <td style={{ padding: '1rem', opacity: 0.6 }}>{(page - 1) * LIMIT + i + 1}</td>
                   <td style={{ padding: '1rem', fontFamily: 'monospace', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.url}</td>
                   <td style={{ padding: '1rem' }}>
                     <span style={{ background: getRiskColor(item.risk), color: 'white', padding: '0.25rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600 }}>
@@ -117,6 +153,26 @@ export default function ScanHistory() {
           </table>
         </div>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+            style={{ padding: '0.5rem 1rem', background: page === 1 ? 'rgba(31,41,55,0.4)' : 'rgba(139,92,246,0.3)', color: 'white', border: 'none', borderRadius: '8px', cursor: page === 1 ? 'not-allowed' : 'pointer', fontWeight: 600 }}>
+            ← Prev
+          </button>
+          {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => i + 1).map(p => (
+            <button key={p} onClick={() => setPage(p)}
+              style={{ padding: '0.5rem 0.9rem', background: page === p ? '#8b5cf6' : 'rgba(31,41,55,0.8)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>
+              {p}
+            </button>
+          ))}
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+            style={{ padding: '0.5rem 1rem', background: page === totalPages ? 'rgba(31,41,55,0.4)' : 'rgba(139,92,246,0.3)', color: 'white', border: 'none', borderRadius: '8px', cursor: page === totalPages ? 'not-allowed' : 'pointer', fontWeight: 600 }}>
+            Next →
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
+import jsPDF from "jspdf";
 
 export default function Quiz() {
   const nav = useNavigate();
@@ -11,6 +12,7 @@ export default function Quiz() {
   const [answered, setAnswered] = useState(false);
   const [score, setScore] = useState(0);
   const [done, setDone] = useState(false);
+  const [cooldowns, setCooldowns] = useState({});
   const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
   const isGuest = !token;
@@ -19,12 +21,26 @@ export default function Quiz() {
   useEffect(() => {
     api.get("/quiz/all").then(res => {
       const all = Array.isArray(res.data) ? res.data : [];
-      setQuizzes(isAdmin ? all : all.filter(q => !q.status || q.status === 'active'));
+      const filtered = isAdmin ? all : all.filter(q => !q.status || q.status === 'active');
+      setQuizzes(filtered);
+      // Check cooldowns for all quizzes
+      if (!isGuest) {
+        filtered.forEach(q => {
+          if (q._id) {
+            api.get(`/results/cooldown/${q._id}`).then(r => {
+              if (!r.data.canAttempt) {
+                setCooldowns(prev => ({ ...prev, [q._id]: r.data.remaining }));
+              }
+            }).catch(() => {});
+          }
+        });
+      }
     }).catch(() => {});
-  }, [isAdmin]);
+  }, [isAdmin, isGuest]);
 
   const startQuiz = (q) => {
     if (isGuest && !q.isDemo) { alert("Please register to take full quizzes"); nav("/register"); return; }
+    if (cooldowns[q._id]) { alert(`Please wait ${cooldowns[q._id]} more minute(s) before retrying this quiz.`); return; }
     setQuiz(q); setQIdx(0); setSelected(null); setAnswered(false); setScore(0); setDone(false);
   };
 
@@ -47,7 +63,7 @@ export default function Quiz() {
       setDone(true);
       if (!isGuest) {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        try { await api.post('/results/save', { quizTitle: quiz.title, userName: user.name, score: finalScore, total, percentage: pct, passed: pct >= 80 }); }
+        try { await api.post('/results/save', { quizTitle: quiz.title, quizId: quiz._id, userName: user.name, score: finalScore, total, percentage: pct, passed: pct >= 80 }); }
         catch (e) {}
       }
     }
@@ -67,6 +83,31 @@ export default function Quiz() {
     const total = quiz.questions.length;
     const pct = Math.round((score / total) * 100);
     const passed = pct >= 80;
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+    const downloadCertificate = () => {
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      doc.setFillColor(15, 23, 42); doc.rect(0, 0, 297, 210, 'F');
+      doc.setDrawColor(59, 130, 246); doc.setLineWidth(3); doc.rect(10, 10, 277, 190);
+      doc.setDrawColor(139, 92, 246); doc.setLineWidth(1); doc.rect(14, 14, 269, 182);
+      doc.setTextColor(59, 130, 246); doc.setFontSize(28); doc.setFont('helvetica', 'bold');
+      doc.text('CERTIFICATE OF COMPLETION', 148.5, 45, { align: 'center' });
+      doc.setTextColor(255, 255, 255); doc.setFontSize(14); doc.setFont('helvetica', 'normal');
+      doc.text('This is to certify that', 148.5, 65, { align: 'center' });
+      doc.setTextColor(16, 185, 129); doc.setFontSize(24); doc.setFont('helvetica', 'bold');
+      doc.text(user.name || 'Student', 148.5, 82, { align: 'center' });
+      doc.setTextColor(255, 255, 255); doc.setFontSize(13); doc.setFont('helvetica', 'normal');
+      doc.text('has successfully completed', 148.5, 97, { align: 'center' });
+      doc.setTextColor(139, 92, 246); doc.setFontSize(18); doc.setFont('helvetica', 'bold');
+      doc.text(quiz.title, 148.5, 112, { align: 'center' });
+      doc.setTextColor(255, 255, 255); doc.setFontSize(13); doc.setFont('helvetica', 'normal');
+      doc.text(`with a score of ${pct}% (${score}/${total} correct)`, 148.5, 127, { align: 'center' });
+      doc.setTextColor(245, 158, 11); doc.setFontSize(11);
+      doc.text(`Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, 148.5, 145, { align: 'center' });
+      doc.setTextColor(100, 116, 139); doc.setFontSize(9);
+      doc.text('Anti-Phishing Cybersecurity Platform', 148.5, 185, { align: 'center' });
+      doc.save(`certificate-${quiz.title.replace(/\s+/g, '-')}.pdf`);
+    };
     return (
       <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#0f172a,#1e293b)', padding: '2rem' }}>
         <div style={{ maxWidth: 700, margin: '0 auto' }}>
@@ -83,6 +124,7 @@ export default function Quiz() {
             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
               <button onClick={() => { setQuiz(null); setDone(false); }} style={{ flex: 1, padding: '1rem', background: 'linear-gradient(45deg,#3b82f6,#1d4ed8)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>Back to Quizzes</button>
               <button onClick={() => nav("/lessons")} style={{ flex: 1, padding: '1rem', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>Review Lessons</button>
+              {passed && !isGuest && <button onClick={downloadCertificate} style={{ flex: 1, padding: '1rem', background: 'linear-gradient(45deg,#f59e0b,#d97706)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>📜 Download Certificate</button>}
               {!isGuest && <button onClick={() => nav(isAdmin ? "/admin" : "/home")} style={{ flex: 1, padding: '1rem', background: 'linear-gradient(45deg,#10b981,#059669)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>Dashboard</button>}
             </div>
           </div>
@@ -171,6 +213,7 @@ export default function Quiz() {
             onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'}
             onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
             {isAdmin && quiz.status === 'waiting' && <span style={{ position: 'absolute', top: '1rem', right: '1rem', background: '#f59e0b', color: 'white', padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600 }}>⏳ Waiting</span>}
+            {!isAdmin && cooldowns[q._id] && <span style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'rgba(220,38,38,0.8)', color: 'white', padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600 }}>⏳ {cooldowns[q._id]}m cooldown</span>}
             <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📝</div>
             <h3 style={{ margin: '0 0 0.5rem' }}>{q.title}</h3>
             <p style={{ opacity: 0.7, margin: '0 0 1rem', fontSize: '0.9rem' }}>{q.description}</p>

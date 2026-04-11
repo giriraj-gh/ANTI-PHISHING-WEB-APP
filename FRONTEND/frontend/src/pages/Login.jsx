@@ -76,6 +76,7 @@ export default function Login() {
     try {
       const res = await api.post("/auth/login", { email, password, role });
       localStorage.setItem("token", res.data.token);
+      localStorage.setItem("refreshToken", res.data.refreshToken || "");
       localStorage.setItem("role", res.data.role);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       if (res.data.role === "admin") { navigate("/admin"); } else { navigate("/home"); }

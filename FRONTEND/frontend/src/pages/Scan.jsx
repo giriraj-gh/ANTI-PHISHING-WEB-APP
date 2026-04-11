@@ -10,6 +10,10 @@ export default function Scan() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [history, setHistory] = useState([]);
+  const [bulkMode, setBulkMode] = useState(false);
+  const [bulkUrls, setBulkUrls] = useState("");
+  const [bulkResults, setBulkResults] = useState([]);
+  const [bulkLoading, setBulkLoading] = useState(false);
   const role = localStorage.getItem("role");
   const isAdmin = role === "admin";
 
@@ -39,6 +43,21 @@ export default function Scan() {
       setError(e.response?.data?.message || 'Error scanning URL. Please try again.');
     }
     setLoading(false);
+  };
+
+  const bulkScan = async () => {
+    const urls = bulkUrls.split('\n').map(u => u.trim()).filter(Boolean);
+    if (urls.length === 0) { setError('Please enter at least one URL'); return; }
+    if (urls.length > 10) { setError('Maximum 10 URLs allowed'); return; }
+    setBulkLoading(true); setBulkResults([]); setError('');
+    try {
+      const res = await api.post('/phish/bulk-scan', { urls });
+      setBulkResults(Array.isArray(res.data) ? res.data : []);
+      loadHistory();
+    } catch (e) {
+      setError(e.response?.data?.message || 'Bulk scan failed.');
+    }
+    setBulkLoading(false);
   };
 
   const getRiskColor = (risk) => {
@@ -89,23 +108,64 @@ export default function Scan() {
 
       {/* Scanner Input */}
       <div style={{ background: 'rgba(31,41,55,0.9)', padding: '2rem', borderRadius: '20px', border: '1px solid rgba(59,130,246,0.2)', marginBottom: '2rem' }}>
-        <h2 style={{ margin: '0 0 0.5rem', fontSize: '1.3rem' }}>🛡️ Enter URL to Scan</h2>
-        <p style={{ margin: '0 0 1.5rem', opacity: 0.6, fontSize: '0.9rem' }}>Paste any suspicious link to check for phishing threats</p>
-        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-          <div style={{ flex: 1, position: 'relative', minWidth: '250px' }}>
-            <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', fontSize: '1.2rem' }}>🌐</span>
-            <input type="text" placeholder="https://example.com or paste any suspicious link..."
-              value={url} onChange={e => { setUrl(e.target.value); setError(''); }}
-              onKeyPress={e => e.key === 'Enter' && scan()}
-              style={{ width: '100%', padding: '1rem 1rem 1rem 3rem', border: '2px solid rgba(59,130,246,0.3)', borderRadius: '12px', background: 'rgba(15,23,42,0.8)', color: 'white', fontSize: '1rem', boxSizing: 'border-box', outline: 'none' }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <div>
+            <h2 style={{ margin: '0 0 0.25rem', fontSize: '1.3rem' }}>🛡️ {bulkMode ? 'Bulk URL Scanner' : 'Enter URL to Scan'}</h2>
+            <p style={{ margin: 0, opacity: 0.6, fontSize: '0.9rem' }}>{bulkMode ? 'Scan up to 10 URLs at once (one per line)' : 'Paste any suspicious link to check for phishing threats'}</p>
           </div>
-          <button onClick={scan} disabled={loading || !url.trim()}
-            style={{ padding: '1rem 2rem', background: loading ? 'rgba(59,130,246,0.5)' : 'linear-gradient(45deg,#3b82f6,#1d4ed8)', color: 'white', border: 'none', borderRadius: '12px', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap' }}>
-            {loading ? <><div style={{ width: 20, height: 20, border: '3px solid rgba(255,255,255,0.3)', borderTop: '3px solid white', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />Scanning...</> : '🔍 Scan Now'}
+          <button onClick={() => { setBulkMode(!bulkMode); setResult(null); setBulkResults([]); setError(''); }}
+            style={{ padding: '0.5rem 1rem', background: bulkMode ? 'rgba(59,130,246,0.3)' : 'rgba(139,92,246,0.3)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>
+            {bulkMode ? '🔍 Single Scan' : '📋 Bulk Scan'}
           </button>
+        </div>
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+          {bulkMode ? (
+            <div style={{ flex: 1 }}>
+              <textarea placeholder="https://example1.com\nhttps://example2.com\n(one URL per line, max 10)"
+                value={bulkUrls} onChange={e => { setBulkUrls(e.target.value); setError(''); }}
+                rows={5}
+                style={{ width: '100%', padding: '1rem', border: '2px solid rgba(59,130,246,0.3)', borderRadius: '12px', background: 'rgba(15,23,42,0.8)', color: 'white', fontSize: '0.9rem', fontFamily: 'monospace', boxSizing: 'border-box', resize: 'vertical', outline: 'none' }} />
+              <button onClick={bulkScan} disabled={bulkLoading || !bulkUrls.trim()}
+                style={{ marginTop: '0.75rem', width: '100%', padding: '1rem', background: bulkLoading ? 'rgba(59,130,246,0.5)' : 'linear-gradient(45deg,#8b5cf6,#7c3aed)', color: 'white', border: 'none', borderRadius: '12px', cursor: bulkLoading ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                {bulkLoading ? <><div style={{ width: 20, height: 20, border: '3px solid rgba(255,255,255,0.3)', borderTop: '3px solid white', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />Scanning...</> : '📋 Scan All URLs'}
+              </button>
+            </div>
+          ) : (
+            <>
+              <div style={{ flex: 1, position: 'relative', minWidth: '250px' }}>
+                <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', fontSize: '1.2rem' }}>🌐</span>
+                <input type="text" placeholder="https://example.com or paste any suspicious link..."
+                  value={url} onChange={e => { setUrl(e.target.value); setError(''); }}
+                  onKeyPress={e => e.key === 'Enter' && scan()}
+                  style={{ width: '100%', padding: '1rem 1rem 1rem 3rem', border: '2px solid rgba(59,130,246,0.3)', borderRadius: '12px', background: 'rgba(15,23,42,0.8)', color: 'white', fontSize: '1rem', boxSizing: 'border-box', outline: 'none' }} />
+              </div>
+              <button onClick={scan} disabled={loading || !url.trim()}
+                style={{ padding: '1rem 2rem', background: loading ? 'rgba(59,130,246,0.5)' : 'linear-gradient(45deg,#3b82f6,#1d4ed8)', color: 'white', border: 'none', borderRadius: '12px', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap' }}>
+                {loading ? <><div style={{ width: 20, height: 20, border: '3px solid rgba(255,255,255,0.3)', borderTop: '3px solid white', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />Scanning...</> : '🔍 Scan Now'}
+              </button>
+            </>
+          )}
         </div>
         {error && <div style={{ marginTop: '1rem', padding: '0.75rem 1rem', background: 'rgba(220,38,38,0.15)', border: '1px solid #dc2626', borderRadius: '8px', color: '#fca5a5', fontWeight: 600 }}>⚠️ {error}</div>}
       </div>
+
+      {/* Bulk Results */}
+      {bulkResults.length > 0 && (
+        <div style={{ background: 'rgba(31,41,55,0.9)', padding: '1.5rem', borderRadius: '20px', border: '1px solid rgba(139,92,246,0.2)', marginBottom: '2rem' }}>
+          <h3 style={{ margin: '0 0 1rem', color: '#8b5cf6' }}>📋 Bulk Scan Results ({bulkResults.length} URLs)</h3>
+          {bulkResults.map((r, i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', background: 'rgba(15,23,42,0.5)', borderRadius: '8px', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem', borderLeft: `4px solid ${getRiskColor(r.risk)}` }}>
+              <div style={{ fontFamily: 'monospace', fontSize: '0.85rem', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: '1rem' }}>{r.url}</div>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <span style={{ background: getRiskBg(r.risk), color: getRiskColor(r.risk), padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 600, border: `1px solid ${getRiskColor(r.risk)}` }}>
+                  {getRiskIcon(r.risk)} {displayRisk(r.risk)}
+                </span>
+                <span style={{ color: getRiskColor(r.risk), fontWeight: 700, fontSize: '0.9rem' }}>{r.score}/100</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Loading */}
       {loading && (

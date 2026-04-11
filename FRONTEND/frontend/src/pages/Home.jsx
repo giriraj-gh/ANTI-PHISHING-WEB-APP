@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
@@ -12,6 +12,9 @@ export default function Home() {
   const [quizResults, setQuizResults] = useState([]);
   const [userStats, setUserStats] = useState({ totalScans: 0, highRisk: 0, mediumRisk: 0, lowRisk: 0 });
   const [adminRequestStatus, setAdminRequestStatus] = useState('none');
+  const [darkMode, setDarkMode] = useState(localStorage.getItem('userDarkMode') === 'true');
+  const [notifications, setNotifications] = useState([]);
+  const [showNotif, setShowNotif] = useState(false);
 
   async function load() {
     try {
@@ -35,9 +38,34 @@ export default function Home() {
       const res = await api.get("/auth/profile");
       setProfile(res.data);
       setAdminRequestStatus(res.data.adminRequest || 'none');
+      if (res.data.darkMode !== undefined) {
+        setDarkMode(res.data.darkMode);
+        localStorage.setItem('userDarkMode', res.data.darkMode);
+      }
     } catch (e) {
       console.log("Profile not found");
     }
+  };
+
+  const loadNotifications = async () => {
+    try {
+      const res = await api.get('/auth/my-notifications');
+      setNotifications(Array.isArray(res.data) ? res.data : []);
+    } catch (e) {}
+  };
+
+  const markNotificationsRead = async () => {
+    try {
+      await api.put('/auth/mark-notifications-read');
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    } catch (e) {}
+  };
+
+  const toggleDarkMode = async () => {
+    const next = !darkMode;
+    setDarkMode(next);
+    localStorage.setItem('userDarkMode', next);
+    try { await api.put('/auth/dark-mode', { darkMode: next }); } catch (e) {}
   };
 
   const requestAdmin = async () => {
@@ -66,6 +94,7 @@ export default function Home() {
     load();
     loadProfile();
     loadQuizResults();
+    loadNotifications();
   }, []);
 
   const high = userStats.highRisk;
@@ -79,7 +108,7 @@ export default function Home() {
   }));
 
   return (
-    <div className="user-dashboard">
+    <div className="user-dashboard" style={{ background: darkMode ? 'linear-gradient(135deg,#0f172a,#1e293b,#0f172a)' : 'linear-gradient(135deg,#f0f4ff,#e8eaf6,#f0f4ff)', color: darkMode ? 'white' : '#1f2937' }}>
       {/* Header */}
       <div className="dashboard-header">
         <div className="header-left">
@@ -100,6 +129,35 @@ export default function Home() {
           <button onClick={() => nav("/scan-history")} className="btn-history">📋 History</button>
           <button onClick={() => nav("/profile")} className="btn-profile">👤 Profile</button>
           <button onClick={() => nav("/report")} className="btn-report">🚨 Report</button>
+          <button onClick={() => nav("/scan")} className="btn-history" style={{ background: 'linear-gradient(45deg,#10b981,#059669)' }}>🔍 Bulk Scan</button>
+          {/* Notifications Bell */}
+          <div style={{ position: 'relative' }}>
+            <button onClick={() => { setShowNotif(!showNotif); if (!showNotif) markNotificationsRead(); }}
+              style={{ padding: '0.75rem', background: 'rgba(59,130,246,0.2)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '8px', cursor: 'pointer', fontSize: '1.2rem', position: 'relative' }}>🔔</button>
+            {notifications.filter(n => !n.read).length > 0 && (
+              <span style={{ position: 'absolute', top: -6, right: -6, background: '#dc2626', color: 'white', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700 }}>
+                {notifications.filter(n => !n.read).length}
+              </span>
+            )}
+            {showNotif && (
+              <div style={{ position: 'absolute', right: 0, top: '110%', width: 300, background: darkMode ? '#1f2937' : 'white', border: '1px solid rgba(59,130,246,0.2)', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.3)', zIndex: 100, overflow: 'hidden' }}>
+                <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(59,130,246,0.1)', fontWeight: 700, color: '#3b82f6' }}>🔔 Notifications</div>
+                {notifications.length === 0 ? (
+                  <div style={{ padding: '1.5rem', textAlign: 'center', opacity: 0.6, color: darkMode ? 'white' : '#374151' }}>No notifications</div>
+                ) : notifications.slice(0, 5).map((n, i) => (
+                  <div key={i} style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(59,130,246,0.05)', background: n.read ? 'transparent' : 'rgba(59,130,246,0.05)', color: darkMode ? 'white' : '#374151', fontSize: '0.85rem' }}>
+                    {n.type === 'success' ? '✅' : n.type === 'warning' ? '⚠️' : 'ℹ️'} {n.message}
+                    <div style={{ fontSize: '0.75rem', opacity: 0.5, marginTop: '0.2rem' }}>{new Date(n.createdAt).toLocaleDateString()}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          {/* Dark Mode Toggle */}
+          <button onClick={toggleDarkMode}
+            style={{ padding: '0.75rem 1rem', background: darkMode ? '#f59e0b' : '#1e293b', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>
+            {darkMode ? '☀️' : '🌙'}
+          </button>
           {adminRequestStatus === 'none' && (
             <button onClick={requestAdmin} className="btn-admin-req">👑 Request Admin</button>
           )}
