@@ -40,7 +40,8 @@ export default function Quiz() {
       setQIdx(i => i + 1); setSelected(null); setAnswered(false);
     } else {
       const total = quiz.questions.length;
-      const finalScore = score + (selected === quiz.questions[qIdx].correctAnswer ? 1 : 0);
+      const isCorrect = selected === quiz.questions[qIdx].correctAnswer;
+      const finalScore = score + (isCorrect ? 1 : 0);
       const pct = Math.round((finalScore / total) * 100);
       setScore(finalScore);
       setDone(true);

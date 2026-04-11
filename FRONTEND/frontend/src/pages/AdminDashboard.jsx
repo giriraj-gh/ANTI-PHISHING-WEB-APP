@@ -314,8 +314,9 @@ export default function AdminDashboard() {
 
 function UserSearchHistory({ API, token }) {
   const [scans, setScans] = React.useState([]);
-  const getRiskColor = (risk) => risk === 'HIGH' ? '#dc2626' : risk === 'MEDIUM' ? '#f59e0b' : '#10b981';
-  const getRiskIcon = (risk) => risk === 'HIGH' ? '🚨' : risk === 'MEDIUM' ? '⚠️' : '✅';
+  const getRiskColor = (risk) => (risk === 'HIGH' || risk === 'Phishing') ? '#dc2626' : (risk === 'MEDIUM' || risk === 'Suspicious') ? '#f59e0b' : '#10b981';
+  const getRiskIcon = (risk) => (risk === 'HIGH' || risk === 'Phishing') ? '🚨' : (risk === 'MEDIUM' || risk === 'Suspicious') ? '⚠️' : '✅';
+  const getRiskLabel = (risk) => risk === 'Phishing' ? 'HIGH' : risk === 'Suspicious' ? 'MEDIUM' : risk === 'Safe' ? 'LOW' : risk;
   React.useEffect(() => {
     fetch(`${API}/api/phish/all`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json()).then(data => setScans(Array.isArray(data) ? data.slice(0, 20) : [])).catch(() => {});
@@ -336,7 +337,7 @@ function UserSearchHistory({ API, token }) {
             <tr key={i} style={{ borderTop: '1px solid rgba(139,92,246,0.1)' }}>
               <td style={{ padding: '0.75rem 1rem', fontWeight: 600 }}>👤 {s.userName || 'Unknown'}</td>
               <td style={{ padding: '0.75rem 1rem', fontFamily: 'monospace', fontSize: '0.85rem', maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.url}</td>
-              <td style={{ padding: '0.75rem 1rem' }}><span style={{ background: getRiskColor(s.risk), color: 'white', padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600 }}>{getRiskIcon(s.risk)} {s.risk}</span></td>
+              <td style={{ padding: '0.75rem 1rem' }}><span style={{ background: getRiskColor(s.risk), color: 'white', padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600 }}>{getRiskIcon(s.risk)} {getRiskLabel(s.risk)}</span></td>
               <td style={{ padding: '0.75rem 1rem', color: getRiskColor(s.risk), fontWeight: 700 }}>{s.score}/100</td>
               <td style={{ padding: '0.75rem 1rem', opacity: 0.7, whiteSpace: 'nowrap' }}>{new Date(s.createdAt).toLocaleDateString()}</td>
             </tr>

@@ -21,9 +21,9 @@ export default function Home() {
       setHistory(data.slice(0, 10).reverse());
       setUserStats({
         totalScans: data.length,
-        highRisk: data.filter(s => s.risk === 'HIGH').length,
-        mediumRisk: data.filter(s => s.risk === 'MEDIUM').length,
-        lowRisk: data.filter(s => s.risk === 'LOW').length
+        highRisk: data.filter(s => s.risk === 'HIGH' || s.risk === 'Phishing').length,
+        mediumRisk: data.filter(s => s.risk === 'MEDIUM' || s.risk === 'Suspicious').length,
+        lowRisk: data.filter(s => s.risk === 'LOW' || s.risk === 'Safe').length
       });
     } catch (e) {
       console.log("No reports yet");
@@ -74,7 +74,7 @@ export default function Home() {
 
   const chartData = history.map((r, i) => ({
     name: i + 1,
-    value: r.risk === "HIGH" ? 3 : r.risk === "MEDIUM" ? 2 : 1,
+    value: (r.risk === 'HIGH' || r.risk === 'Phishing') ? 3 : (r.risk === 'MEDIUM' || r.risk === 'Suspicious') ? 2 : 1,
     risk: r.risk
   }));
 
@@ -206,7 +206,7 @@ export default function Home() {
             {Array.isArray(rows) && rows.slice(0, 5).map(r => (
               <div key={r._id} className="scan-item">
                 <div className="scan-url">{r.url}</div>
-                <div className={`scan-risk risk-${r.risk.toLowerCase()}`}>
+                <div className={`scan-risk risk-${r.risk === 'Phishing' ? 'high' : r.risk === 'Suspicious' ? 'medium' : r.risk === 'Safe' ? 'low' : r.risk.toLowerCase()}`}>
                   {r.risk}
                 </div>
               </div>

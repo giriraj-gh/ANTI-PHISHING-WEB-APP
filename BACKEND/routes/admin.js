@@ -26,9 +26,9 @@ router.get('/pending-users', auth, async (req, res) => {
 router.get('/stats', auth, async (req, res) => {
   try {
     const [high, medium, low] = await Promise.all([
-      ScanLog.countDocuments({ risk: 'HIGH' }),
-      ScanLog.countDocuments({ risk: 'MEDIUM' }),
-      ScanLog.countDocuments({ risk: 'LOW' })
+      ScanLog.countDocuments({ risk: { $in: ['HIGH', 'Phishing'] } }),
+      ScanLog.countDocuments({ risk: { $in: ['MEDIUM', 'Suspicious'] } }),
+      ScanLog.countDocuments({ risk: { $in: ['LOW', 'Safe'] } })
     ]);
     res.json({ high, medium, low });
   } catch (e) { res.status(500).json({ message: 'Server error' }); }
@@ -36,7 +36,10 @@ router.get('/stats', auth, async (req, res) => {
 
 router.get('/scans/:risk', auth, async (req, res) => {
   try {
-    const logs = await ScanLog.find({ risk: req.params.risk.toUpperCase() }).sort({ createdAt: -1 }).limit(20);
+    const r = req.params.risk.toUpperCase();
+    const riskMap = { HIGH: ['HIGH', 'Phishing'], MEDIUM: ['MEDIUM', 'Suspicious'], LOW: ['LOW', 'Safe'] };
+    const risks = riskMap[r] || [r];
+    const logs = await ScanLog.find({ risk: { $in: risks } }).sort({ createdAt: -1 }).limit(20);
     res.json(logs);
   } catch (e) { res.status(500).json({ message: 'Server error' }); }
 });

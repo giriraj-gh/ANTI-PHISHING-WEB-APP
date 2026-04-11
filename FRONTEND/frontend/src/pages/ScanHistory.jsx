@@ -14,7 +14,9 @@ export default function ScanHistory() {
 
   useEffect(() => {
     let data = history;
-    if (filter !== "ALL") data = data.filter(h => h.risk === filter);
+    if (filter === 'HIGH') data = data.filter(h => h.risk === 'HIGH' || h.risk === 'Phishing');
+    else if (filter === 'MEDIUM') data = data.filter(h => h.risk === 'MEDIUM' || h.risk === 'Suspicious');
+    else if (filter === 'LOW') data = data.filter(h => h.risk === 'LOW' || h.risk === 'Safe');
     if (search) data = data.filter(h => h.url.toLowerCase().includes(search.toLowerCase()));
     setFiltered(data);
   }, [search, filter, history]);
@@ -27,12 +29,13 @@ export default function ScanHistory() {
     } catch (e) { console.log(e); }
   };
 
-  const getRiskColor = (risk) => risk === 'HIGH' ? '#dc2626' : risk === 'MEDIUM' ? '#f59e0b' : '#10b981';
-  const getRiskIcon = (risk) => risk === 'HIGH' ? '🚨' : risk === 'MEDIUM' ? '⚠️' : '✅';
+  const getRiskColor = (risk) => (risk === 'HIGH' || risk === 'Phishing') ? '#dc2626' : (risk === 'MEDIUM' || risk === 'Suspicious') ? '#f59e0b' : '#10b981';
+  const getRiskIcon = (risk) => (risk === 'HIGH' || risk === 'Phishing') ? '🚨' : (risk === 'MEDIUM' || risk === 'Suspicious') ? '⚠️' : '✅';
+  const getRiskLabel = (risk) => risk === 'Phishing' ? 'HIGH' : risk === 'Suspicious' ? 'MEDIUM' : risk === 'Safe' ? 'LOW' : risk;
 
-  const highCount = history.filter(h => h.risk === 'HIGH').length;
-  const mediumCount = history.filter(h => h.risk === 'MEDIUM').length;
-  const lowCount = history.filter(h => h.risk === 'LOW').length;
+  const highCount = history.filter(h => h.risk === 'HIGH' || h.risk === 'Phishing').length;
+  const mediumCount = history.filter(h => h.risk === 'MEDIUM' || h.risk === 'Suspicious').length;
+  const lowCount = history.filter(h => h.risk === 'LOW' || h.risk === 'Safe').length;
 
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#1e1b4b,#312e81,#1e1b4b)', color: 'white', padding: '2rem' }}>
@@ -102,7 +105,7 @@ export default function ScanHistory() {
                   <td style={{ padding: '1rem', fontFamily: 'monospace', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.url}</td>
                   <td style={{ padding: '1rem' }}>
                     <span style={{ background: getRiskColor(item.risk), color: 'white', padding: '0.25rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600 }}>
-                      {getRiskIcon(item.risk)} {item.risk}
+                      {getRiskIcon(item.risk)} {getRiskLabel(item.risk)}
                     </span>
                   </td>
                   <td style={{ padding: '1rem', color: getRiskColor(item.risk), fontWeight: 700 }}>{item.score}/100</td>
