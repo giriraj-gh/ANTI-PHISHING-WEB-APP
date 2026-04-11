@@ -7,6 +7,7 @@ export default function LearningDashboard() {
   const nav = useNavigate();
   const [results, setResults] = useState([]);
   const [scans, setScans] = useState([]);
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
