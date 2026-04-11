@@ -2,6 +2,63 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../api";
 
+// SVG Icons
+const GuestIcon = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+    <circle cx="9" cy="7" r="4"/>
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+  </svg>
+);
+
+const UserIcon = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+    <circle cx="12" cy="7" r="4"/>
+  </svg>
+);
+
+const AdminIcon = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+  </svg>
+);
+
+const EmailIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+    <polyline points="22,6 12,13 2,6"/>
+  </svg>
+);
+
+const LockIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+  </svg>
+);
+
+const EyeIcon = ({ open }) => open ? (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+    <circle cx="12" cy="12" r="3"/>
+  </svg>
+) : (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+    <line x1="1" y1="1" x2="23" y2="23"/>
+  </svg>
+);
+
+const ShieldIcon = () => (
+  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    <polyline points="9,12 11,14 15,10"/>
+  </svg>
+);
+
 export default function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -30,10 +87,13 @@ export default function Login() {
   };
 
   const roles = [
-    { val: "guest", icon: "👥", label: "Guest", desc: "Browse freely" },
-    { val: "user",  icon: "👤", label: "User",  desc: "Scan & Learn" },
-    { val: "admin", icon: "🛡️", label: "Admin", desc: "Full Access" },
+    { val: "guest", Icon: GuestIcon, label: "Guest",  desc: "Browse freely",  color: "#0ea5e9" },
+    { val: "user",  Icon: UserIcon,  label: "User",   desc: "Scan & Learn",   color: "#3b82f6" },
+    { val: "admin", Icon: AdminIcon, label: "Admin",  desc: "Full Access",    color: "#6366f1" },
   ];
+
+  const btnColor = role === "admin" ? "linear-gradient(135deg,#4f46e5,#6366f1)" : "linear-gradient(135deg,#0284c7,#3b82f6)";
+  const btnShadow = role === "admin" ? "0 8px 24px rgba(99,102,241,0.4)" : "0 8px 24px rgba(14,165,233,0.4)";
 
   return (
     <>
@@ -41,375 +101,373 @@ export default function Login() {
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .page {
+        .lp-wrap {
           min-height: 100vh;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: #060d1f;
+          background: linear-gradient(160deg, #e0f2fe 0%, #bae6fd 30%, #dbeafe 60%, #ede9fe 100%);
           font-family: 'Inter', sans-serif;
           padding: 1.5rem;
           position: relative;
           overflow: hidden;
         }
 
-        /* Animated background blobs */
-        .blob {
+        /* Animated circles in background */
+        .lp-circle {
           position: fixed;
           border-radius: 50%;
-          filter: blur(80px);
-          opacity: 0.35;
           pointer-events: none;
-          animation: blob-move 10s ease-in-out infinite;
+          animation: circle-float ease-in-out infinite;
         }
-        .blob-1 { width: 500px; height: 500px; background: #1d4ed8; top: -150px; left: -150px; animation-delay: 0s; }
-        .blob-2 { width: 400px; height: 400px; background: #0ea5e9; bottom: -100px; right: -100px; animation-delay: 3s; }
-        .blob-3 { width: 300px; height: 300px; background: #6366f1; top: 50%; left: 50%; transform: translate(-50%,-50%); animation-delay: 6s; }
+        .lp-c1 { width:400px;height:400px;background:rgba(14,165,233,0.12);top:-100px;left:-100px;animation-duration:12s;animation-delay:0s; }
+        .lp-c2 { width:300px;height:300px;background:rgba(59,130,246,0.1);bottom:-80px;right:-80px;animation-duration:10s;animation-delay:3s; }
+        .lp-c3 { width:200px;height:200px;background:rgba(99,102,241,0.08);top:40%;right:10%;animation-duration:14s;animation-delay:6s; }
+        .lp-c4 { width:150px;height:150px;background:rgba(14,165,233,0.1);bottom:20%;left:5%;animation-duration:9s;animation-delay:2s; }
 
-        @keyframes blob-move {
-          0%,100% { transform: scale(1) translate(0,0); }
-          33% { transform: scale(1.1) translate(20px,-20px); }
-          66% { transform: scale(0.95) translate(-15px,15px); }
+        @keyframes circle-float {
+          0%,100% { transform: translate(0,0) scale(1); }
+          33% { transform: translate(15px,-15px) scale(1.05); }
+          66% { transform: translate(-10px,10px) scale(0.97); }
         }
 
-        /* Floating particles */
-        .particles { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
-        .p {
-          position: absolute;
-          width: 3px; height: 3px;
-          background: rgba(14,165,233,0.6);
+        /* Floating dots */
+        .lp-dot {
+          position: fixed;
+          width: 6px; height: 6px;
           border-radius: 50%;
-          animation: rise linear infinite;
+          background: rgba(14,165,233,0.4);
+          pointer-events: none;
+          animation: dot-rise linear infinite;
         }
-        @keyframes rise {
-          0% { transform: translateY(100vh) scale(0); opacity: 0; }
-          10% { opacity: 1; }
-          90% { opacity: 0.5; }
-          100% { transform: translateY(-50px) scale(1); opacity: 0; }
+        @keyframes dot-rise {
+          0%   { transform: translateY(100vh); opacity: 0; }
+          10%  { opacity: 1; }
+          90%  { opacity: 0.4; }
+          100% { transform: translateY(-60px); opacity: 0; }
         }
 
         /* Card */
-        .card {
+        .lp-card {
           width: 100%;
-          max-width: 440px;
-          background: rgba(255,255,255,0.04);
-          border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 24px;
-          padding: 2.5rem;
-          backdrop-filter: blur(30px);
-          box-shadow: 0 25px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+          max-width: 420px;
+          background: rgba(255,255,255,0.75);
+          border: 1px solid rgba(255,255,255,0.9);
+          border-radius: 28px;
+          padding: 2.5rem 2.25rem;
+          backdrop-filter: blur(20px);
+          box-shadow: 0 20px 60px rgba(14,165,233,0.15), 0 4px 20px rgba(0,0,0,0.08);
           position: relative;
           z-index: 10;
-          animation: card-in 0.7s cubic-bezier(0.16,1,0.3,1) both;
+          animation: card-up 0.7s cubic-bezier(0.16,1,0.3,1) both;
         }
 
-        @keyframes card-in {
-          from { opacity: 0; transform: translateY(30px) scale(0.97); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
+        @keyframes card-up {
+          from { opacity:0; transform:translateY(32px) scale(0.96); }
+          to   { opacity:1; transform:translateY(0) scale(1); }
         }
 
-        /* Top logo */
-        .logo-wrap {
+        /* Logo */
+        .lp-logo {
           display: flex; flex-direction: column; align-items: center;
-          margin-bottom: 2rem;
+          margin-bottom: 1.75rem;
         }
 
-        .logo-ring {
-          width: 72px; height: 72px;
+        .lp-logo-icon {
+          width: 68px; height: 68px;
+          background: linear-gradient(135deg, #0284c7, #3b82f6);
           border-radius: 20px;
-          background: linear-gradient(135deg, #1d4ed8, #0ea5e9);
           display: flex; align-items: center; justify-content: center;
-          font-size: 2rem;
-          box-shadow: 0 8px 32px rgba(14,165,233,0.4);
-          margin-bottom: 1rem;
-          animation: logo-bounce 3s ease-in-out infinite;
+          box-shadow: 0 8px 28px rgba(14,165,233,0.35);
+          margin-bottom: 0.9rem;
+          animation: icon-float 3s ease-in-out infinite;
           position: relative;
         }
 
-        .logo-ring::after {
+        .lp-logo-icon::before {
           content: '';
-          position: absolute; inset: -4px;
-          border-radius: 24px;
-          border: 2px solid rgba(14,165,233,0.3);
-          animation: ring-spin 4s linear infinite;
+          position: absolute; inset: -5px;
+          border-radius: 25px;
+          border: 2px solid rgba(14,165,233,0.25);
+          animation: icon-ring 4s linear infinite;
         }
 
-        @keyframes logo-bounce {
+        @keyframes icon-float {
           0%,100% { transform: translateY(0); }
-          50% { transform: translateY(-6px); }
+          50% { transform: translateY(-7px); }
         }
 
-        @keyframes ring-spin {
+        @keyframes icon-ring {
           from { transform: rotate(0deg); }
           to   { transform: rotate(360deg); }
         }
 
-        .logo-title {
-          font-size: 1.5rem; font-weight: 800; color: white; letter-spacing: -0.5px;
+        .lp-logo-title {
+          font-size: 1.45rem; font-weight: 800; color: #0f172a; letter-spacing: -0.5px;
         }
 
-        .logo-title span {
-          background: linear-gradient(90deg, #38bdf8, #818cf8);
-          -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
+        .lp-logo-title span { color: #0284c7; }
 
-        .logo-sub { color: rgba(255,255,255,0.35); font-size: 0.82rem; margin-top: 0.25rem; }
+        .lp-logo-sub {
+          font-size: 0.8rem; color: #64748b; margin-top: 0.2rem;
+        }
 
         /* Role selector */
-        .roles { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.6rem; margin-bottom: 1.75rem; }
+        .lp-roles {
+          display: grid; grid-template-columns: 1fr 1fr 1fr;
+          gap: 0.6rem; margin-bottom: 1.6rem;
+        }
 
-        .role-btn {
-          padding: 0.85rem 0.5rem;
-          border-radius: 14px;
-          border: 1.5px solid rgba(255,255,255,0.07);
-          background: rgba(255,255,255,0.03);
+        .lp-role {
+          padding: 0.9rem 0.4rem;
+          border-radius: 16px;
+          border: 2px solid #e2e8f0;
+          background: white;
           cursor: pointer;
           text-align: center;
-          transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+          transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
           position: relative;
-          overflow: hidden;
         }
 
-        .role-btn::before {
-          content: '';
-          position: absolute; inset: 0;
-          background: linear-gradient(135deg, rgba(14,165,233,0.15), rgba(99,102,241,0.1));
-          opacity: 0;
-          transition: opacity 0.25s;
+        .lp-role:hover {
+          border-color: #7dd3fc;
+          background: #f0f9ff;
+          transform: translateY(-4px);
+          box-shadow: 0 8px 20px rgba(14,165,233,0.15);
         }
 
-        .role-btn:hover { transform: translateY(-3px); border-color: rgba(14,165,233,0.3); }
-        .role-btn:hover::before { opacity: 1; }
-
-        .role-btn.active {
+        .lp-role.active {
           border-color: #0ea5e9;
-          background: rgba(14,165,233,0.1);
-          transform: translateY(-3px) scale(1.02);
-          box-shadow: 0 8px 24px rgba(14,165,233,0.2), 0 0 0 1px rgba(14,165,233,0.3);
+          background: linear-gradient(135deg, #f0f9ff, #eff6ff);
+          transform: translateY(-4px) scale(1.03);
+          box-shadow: 0 10px 28px rgba(14,165,233,0.25);
         }
 
-        .role-btn.active::before { opacity: 1; }
+        .lp-role-icon {
+          display: flex; align-items: center; justify-content: center;
+          margin-bottom: 0.4rem;
+          color: #94a3b8;
+          transition: color 0.3s;
+        }
 
-        .role-icon { font-size: 1.5rem; margin-bottom: 0.3rem; display: block; }
-        .role-name { font-size: 0.8rem; font-weight: 700; color: rgba(255,255,255,0.5); display: block; }
-        .role-desc { font-size: 0.68rem; color: rgba(255,255,255,0.25); display: block; margin-top: 0.1rem; }
-        .role-btn.active .role-name { color: #7dd3fc; }
-        .role-btn.active .role-desc { color: rgba(125,211,252,0.5); }
+        .lp-role:hover .lp-role-icon { color: #0ea5e9; }
+        .lp-role.active .lp-role-icon { color: #0284c7; }
 
-        /* Active indicator dot */
-        .role-btn.active::after {
+        .lp-role-name {
+          font-size: 0.8rem; font-weight: 700; color: #64748b; display: block;
+          transition: color 0.3s;
+        }
+
+        .lp-role-desc {
+          font-size: 0.65rem; color: #94a3b8; display: block; margin-top: 0.1rem;
+          transition: color 0.3s;
+        }
+
+        .lp-role.active .lp-role-name { color: #0284c7; }
+        .lp-role.active .lp-role-desc { color: #38bdf8; }
+
+        /* Active dot */
+        .lp-role.active::after {
           content: '';
-          position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%);
+          position: absolute; bottom: 7px; left: 50%; transform: translateX(-50%);
           width: 5px; height: 5px; border-radius: 50%;
           background: #0ea5e9;
-          box-shadow: 0 0 6px #0ea5e9;
+          box-shadow: 0 0 8px #0ea5e9;
+          animation: dot-pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes dot-pulse {
+          0%,100% { transform: translateX(-50%) scale(1); opacity: 1; }
+          50% { transform: translateX(-50%) scale(1.4); opacity: 0.7; }
         }
 
         /* Fields */
-        .fields { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.25rem; }
+        .lp-fields { display: flex; flex-direction: column; gap: 0.9rem; margin-bottom: 1.1rem; }
 
-        .field label {
-          display: block; font-size: 0.8rem; font-weight: 600;
-          color: rgba(255,255,255,0.45); margin-bottom: 0.4rem; letter-spacing: 0.3px;
+        .lp-field label {
+          display: block; font-size: 0.78rem; font-weight: 600;
+          color: #475569; margin-bottom: 0.35rem; letter-spacing: 0.3px;
         }
 
-        .input-box { position: relative; }
+        .lp-input-wrap { position: relative; }
 
-        .input-icon {
+        .lp-input-icon {
           position: absolute; left: 0.85rem; top: 50%;
-          transform: translateY(-50%); font-size: 0.9rem; opacity: 0.35; pointer-events: none;
+          transform: translateY(-50%); color: #94a3b8; pointer-events: none;
+          display: flex; align-items: center;
         }
 
-        .inp {
-          width: 100%; padding: 0.8rem 1rem 0.8rem 2.5rem;
-          background: rgba(255,255,255,0.05);
-          border: 1.5px solid rgba(255,255,255,0.07);
-          border-radius: 12px; color: white; font-size: 0.9rem;
+        .lp-inp {
+          width: 100%; padding: 0.78rem 1rem 0.78rem 2.5rem;
+          background: #f8fafc;
+          border: 1.5px solid #e2e8f0;
+          border-radius: 12px; color: #0f172a; font-size: 0.9rem;
           outline: none; transition: all 0.25s; font-family: inherit;
         }
 
-        .inp::placeholder { color: rgba(255,255,255,0.18); }
+        .lp-inp::placeholder { color: #cbd5e1; }
 
-        .inp:focus {
+        .lp-inp:focus {
           border-color: #0ea5e9;
-          background: rgba(14,165,233,0.07);
+          background: #f0f9ff;
           box-shadow: 0 0 0 3px rgba(14,165,233,0.12);
         }
 
-        .eye {
+        .lp-eye {
           position: absolute; right: 0.85rem; top: 50%;
           transform: translateY(-50%); background: none; border: none;
-          cursor: pointer; font-size: 0.9rem; opacity: 0.35; transition: opacity 0.2s;
+          cursor: pointer; color: #94a3b8; transition: color 0.2s;
+          display: flex; align-items: center;
         }
-        .eye:hover { opacity: 0.8; }
+        .lp-eye:hover { color: #0ea5e9; }
 
         /* Error */
-        .err {
-          background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2);
+        .lp-err {
+          background: #fef2f2; border: 1px solid #fecaca;
           border-radius: 10px; padding: 0.65rem 0.9rem;
-          color: #fca5a5; font-size: 0.82rem; margin-bottom: 1rem;
+          color: #dc2626; font-size: 0.82rem; margin-bottom: 1rem;
           display: flex; align-items: center; gap: 0.5rem;
           animation: shake 0.4s ease;
         }
 
         @keyframes shake {
           0%,100% { transform: translateX(0); }
-          25% { transform: translateX(-6px); }
-          75% { transform: translateX(6px); }
+          25% { transform: translateX(-5px); }
+          75% { transform: translateX(5px); }
         }
 
         /* Button */
-        .btn {
-          width: 100%; padding: 0.88rem; border: none; border-radius: 13px;
+        .lp-btn {
+          width: 100%; padding: 0.85rem; border: none; border-radius: 13px;
           font-size: 0.95rem; font-weight: 700; cursor: pointer; color: white;
-          background: linear-gradient(135deg, #1d4ed8, #0ea5e9);
-          box-shadow: 0 6px 20px rgba(14,165,233,0.3);
           display: flex; align-items: center; justify-content: center; gap: 0.6rem;
           transition: all 0.3s; font-family: inherit; letter-spacing: 0.2px;
           position: relative; overflow: hidden;
         }
 
-        .btn::after {
-          content: '';
-          position: absolute; inset: 0;
-          background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
-          opacity: 0; transition: opacity 0.3s;
-        }
+        .lp-btn:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.08); }
+        .lp-btn:active:not(:disabled) { transform: translateY(0); }
+        .lp-btn:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
 
-        .btn:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 30px rgba(14,165,233,0.45);
-        }
-
-        .btn:hover::after { opacity: 1; }
-        .btn:active:not(:disabled) { transform: translateY(0); }
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-
-        .btn.admin-btn { background: linear-gradient(135deg, #4f46e5, #6366f1); box-shadow: 0 6px 20px rgba(99,102,241,0.3); }
-        .btn.admin-btn:hover:not(:disabled) { box-shadow: 0 10px 30px rgba(99,102,241,0.45); }
-
-        .spin {
+        .lp-spin {
           width: 17px; height: 17px;
-          border: 2px solid rgba(255,255,255,0.3);
+          border: 2px solid rgba(255,255,255,0.35);
           border-top-color: white; border-radius: 50%;
           animation: spinning 0.7s linear infinite;
         }
         @keyframes spinning { to { transform: rotate(360deg); } }
 
         /* Divider */
-        .divider { display: flex; align-items: center; gap: 0.75rem; margin: 1rem 0; }
-        .div-line { flex: 1; height: 1px; background: rgba(255,255,255,0.07); }
-        .div-txt { color: rgba(255,255,255,0.2); font-size: 0.75rem; }
+        .lp-div { display: flex; align-items: center; gap: 0.75rem; margin: 0.9rem 0; }
+        .lp-div-line { flex: 1; height: 1px; background: #e2e8f0; }
+        .lp-div-txt { color: #94a3b8; font-size: 0.75rem; }
 
-        /* Guest */
-        .guest-btn {
-          width: 100%; padding: 0.8rem; border: 1.5px solid rgba(255,255,255,0.07);
-          border-radius: 12px; background: transparent;
-          color: rgba(255,255,255,0.4); font-size: 0.88rem; font-weight: 500;
+        /* Guest btn */
+        .lp-guest {
+          width: 100%; padding: 0.78rem; border: 1.5px solid #e2e8f0;
+          border-radius: 12px; background: white;
+          color: #64748b; font-size: 0.88rem; font-weight: 600;
           cursor: pointer; transition: all 0.25s; font-family: inherit;
-          display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+          display: flex; align-items: center; justify-content: center; gap: 0.6rem;
         }
-        .guest-btn:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); }
+        .lp-guest:hover { background: #f0f9ff; border-color: #7dd3fc; color: #0284c7; }
 
         /* Footer */
-        .footer { display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; }
-        .footer a { color: #38bdf8; text-decoration: none; font-size: 0.82rem; font-weight: 500; transition: color 0.2s; }
-        .footer a:hover { color: #7dd3fc; }
+        .lp-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; }
+        .lp-footer a { color: #0284c7; text-decoration: none; font-size: 0.82rem; font-weight: 500; transition: color 0.2s; }
+        .lp-footer a:hover { color: #0ea5e9; }
       `}</style>
 
-      {/* Background */}
-      <div style={{minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', position:'relative', overflow:'hidden', background:'#060d1f', padding:'1.5rem'}}>
-      <div className="blob blob-1" />
-      <div className="blob blob-2" />
-      <div className="blob blob-3" />
+      {/* Background circles */}
+      <div className="lp-c1 lp-circle" />
+      <div className="lp-c2 lp-circle" />
+      <div className="lp-c3 lp-circle" />
+      <div className="lp-c4 lp-circle" />
 
-      {/* Particles */}
-      <div className="particles">
-        {[
-          {l:'8%',d:'8s',del:'0s'},{l:'18%',d:'12s',del:'2s'},
-          {l:'30%',d:'9s',del:'4s'},{l:'45%',d:'14s',del:'1s'},
-          {l:'58%',d:'10s',del:'6s'},{l:'70%',d:'11s',del:'3s'},
-          {l:'82%',d:'13s',del:'5s'},{l:'92%',d:'8s',del:'7s'},
-        ].map((p,i) => (
-          <div key={i} className="p" style={{ left:p.l, animationDuration:p.d, animationDelay:p.del }} />
-        ))}
-      </div>
+      {/* Floating dots */}
+      {[{l:'10%',d:'9s',del:'0s'},{l:'22%',d:'13s',del:'2s'},{l:'38%',d:'10s',del:'5s'},
+        {l:'55%',d:'15s',del:'1s'},{l:'68%',d:'11s',del:'4s'},{l:'80%',d:'12s',del:'7s'},
+        {l:'90%',d:'8s',del:'3s'}].map((p,i) => (
+        <div key={i} className="lp-dot" style={{left:p.l,animationDuration:p.d,animationDelay:p.del}} />
+      ))}
 
-      {/* Card */}
-      <div className="card">
+      {/* Centered wrapper */}
+      <div className="lp-wrap">
+        <div className="lp-card">
 
-        {/* Logo */}
-        <div className="logo-wrap">
-          <div className="logo-ring">🛡️</div>
-          <div className="logo-title">Anti<span>Phishing</span></div>
-          <div className="logo-sub">Cybersecurity Protection Platform</div>
-        </div>
+          {/* Logo */}
+          <div className="lp-logo">
+            <div className="lp-logo-icon"><ShieldIcon /></div>
+            <div className="lp-logo-title">Anti<span>Phishing</span></div>
+            <div className="lp-logo-sub">Cybersecurity Protection Platform</div>
+          </div>
 
-        {/* Role Selector */}
-        <div className="roles">
-          {roles.map(r => (
-            <div key={r.val} className={`role-btn ${role === r.val ? 'active' : ''}`} onClick={() => setRole(r.val)}>
-              <span className="role-icon">{r.icon}</span>
-              <span className="role-name">{r.label}</span>
-              <span className="role-desc">{r.desc}</span>
-            </div>
-          ))}
-        </div>
+          {/* Role Selector */}
+          <div className="lp-roles">
+            {roles.map(({ val, Icon, label, desc }) => (
+              <div key={val} className={`lp-role ${role === val ? 'active' : ''}`} onClick={() => setRole(val)}>
+                <div className="lp-role-icon"><Icon /></div>
+                <span className="lp-role-name">{label}</span>
+                <span className="lp-role-desc">{desc}</span>
+              </div>
+            ))}
+          </div>
 
-        {/* Error */}
-        {error && <div className="err">⚠️ {error}</div>}
+          {/* Error */}
+          {error && <div className="lp-err">⚠ {error}</div>}
 
-        {/* Form */}
-        <form onSubmit={submit}>
+          {/* Form */}
+          <form onSubmit={submit}>
+            {role !== 'guest' && (
+              <div className="lp-fields">
+                <div className="lp-field">
+                  <label>Email Address</label>
+                  <div className="lp-input-wrap">
+                    <span className="lp-input-icon"><EmailIcon /></span>
+                    <input className="lp-inp" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required />
+                  </div>
+                </div>
+                <div className="lp-field">
+                  <label>Password</label>
+                  <div className="lp-input-wrap">
+                    <span className="lp-input-icon"><LockIcon /></span>
+                    <input className="lp-inp" type={showPassword ? 'text' : 'password'} placeholder="Enter your password" value={password} onChange={e => setPassword(e.target.value)} required />
+                    <button type="button" className="lp-eye" onClick={() => setShowPassword(!showPassword)}>
+                      <EyeIcon open={showPassword} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <button type="submit" className="lp-btn" disabled={loading}
+              style={{ background: btnColor, boxShadow: btnShadow }}>
+              {loading
+                ? <><div className="lp-spin" /> Signing In...</>
+                : role === 'guest'
+                  ? <> Continue as Guest</>
+                  : <> Sign In to {role === 'admin' ? 'Admin Panel' : 'Dashboard'}</>
+              }
+            </button>
+          </form>
+
           {role !== 'guest' && (
-            <div className="fields">
-              <div className="field">
-                <label>Email Address</label>
-                <div className="input-box">
-                  <span className="input-icon">📧</span>
-                  <input className="inp" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required />
-                </div>
+            <>
+              <div className="lp-div">
+                <div className="lp-div-line" /><span className="lp-div-txt">or</span><div className="lp-div-line" />
               </div>
-              <div className="field">
-                <label>Password</label>
-                <div className="input-box">
-                  <span className="input-icon">🔒</span>
-                  <input className="inp" type={showPassword ? 'text' : 'password'} placeholder="Enter your password" value={password} onChange={e => setPassword(e.target.value)} required />
-                  <button type="button" className="eye" onClick={() => setShowPassword(!showPassword)}>
-                    {showPassword ? '👁️' : '🙈'}
-                  </button>
-                </div>
-              </div>
-            </div>
+              <button className="lp-guest" onClick={() => navigate('/guest')}>
+                <GuestIcon /> Continue as Guest
+              </button>
+            </>
           )}
 
-          <button type="submit" className={`btn ${role === 'admin' ? 'admin-btn' : ''}`} disabled={loading}>
-            {loading
-              ? <><div className="spin" /> Signing In...</>
-              : role === 'guest'
-                ? <>👥 Continue as Guest</>
-                : <>{role === 'admin' ? '🔐' : '🚀'} Sign In to {role === 'admin' ? 'Admin Panel' : 'Dashboard'}</>
-            }
-          </button>
-        </form>
+          <div className="lp-footer">
+            <Link to="/register">New here? <strong>Sign Up</strong></Link>
+            <Link to="/forgot-password">Forgot password?</Link>
+          </div>
 
-        {role !== 'guest' && (
-          <>
-            <div className="divider">
-              <div className="div-line" /><span className="div-txt">or</span><div className="div-line" />
-            </div>
-            <button className="guest-btn" onClick={() => navigate('/guest')}>
-              👥 Continue as Guest
-            </button>
-          </>
-        )}
-
-        <div className="footer">
-          <Link to="/register">New here? <strong>Sign Up</strong></Link>
-          <Link to="/forgot-password">Forgot password?</Link>
         </div>
-
-      </div>
       </div>
     </>
   );
