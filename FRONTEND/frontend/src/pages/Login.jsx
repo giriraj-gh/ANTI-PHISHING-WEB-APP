@@ -15,7 +15,7 @@ export default function Login() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    if (role === 'guest') { navigate("/guest"); setLoading(false); return; }
+    if (role === "guest") { navigate("/guest"); setLoading(false); return; }
     try {
       const res = await api.post("/auth/login", { email, password, role });
       localStorage.setItem("token", res.data.token);
@@ -32,562 +32,370 @@ export default function Login() {
   return (
     <>
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; }
 
-        .login-page {
-          min-height: 100vh;
-          display: flex;
-          background: #0a0e1a;
-          font-family: 'Segoe UI', sans-serif;
-          overflow: hidden;
+        .lp { min-height: 100vh; display: flex; background: #020b18; overflow: hidden; position: relative; }
+
+        /* Animated background */
+        .lp-bg {
+          position: fixed; inset: 0; z-index: 0;
+          background: radial-gradient(ellipse at 20% 50%, rgba(14,165,233,0.12) 0%, transparent 60%),
+                      radial-gradient(ellipse at 80% 20%, rgba(59,130,246,0.1) 0%, transparent 50%),
+                      radial-gradient(ellipse at 60% 80%, rgba(99,102,241,0.08) 0%, transparent 50%);
         }
 
-        /* ── LEFT PANEL ── */
-        .left-panel {
-          flex: 1;
-          background: linear-gradient(135deg, #0d1b2a 0%, #1a1f3a 40%, #0f2044 70%, #1a0a3a 100%);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 3rem;
+        /* Grid lines */
+        .lp-grid {
+          position: fixed; inset: 0; z-index: 0;
+          background-image: linear-gradient(rgba(14,165,233,0.04) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(14,165,233,0.04) 1px, transparent 1px);
+          background-size: 60px 60px;
+        }
+
+        /* LEFT */
+        .lp-left {
+          flex: 1; display: flex; flex-direction: column;
+          align-items: center; justify-content: center;
+          padding: 4rem 3rem; position: relative; z-index: 1;
+        }
+
+        .lp-shield {
+          position: relative; margin-bottom: 2.5rem;
+          animation: shield-float 4s ease-in-out infinite;
+        }
+
+        @keyframes shield-float {
+          0%,100% { transform: translateY(0); }
+          50% { transform: translateY(-12px); }
+        }
+
+        .lp-shield-outer {
+          width: 160px; height: 160px;
+          background: linear-gradient(135deg, rgba(14,165,233,0.15), rgba(59,130,246,0.1));
+          border: 1px solid rgba(14,165,233,0.3);
+          border-radius: 50%; display: flex; align-items: center; justify-content: center;
           position: relative;
-          overflow: hidden;
         }
 
-        .left-panel::before {
-          content: '';
-          position: absolute;
-          width: 600px; height: 600px;
-          background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%);
-          top: -100px; left: -100px;
-          animation: glow-move 8s ease-in-out infinite;
+        .lp-shield-outer::before {
+          content: ''; position: absolute; inset: -8px; border-radius: 50%;
+          border: 1px solid rgba(14,165,233,0.15);
+          animation: ring-pulse 3s ease-in-out infinite;
         }
 
-        .left-panel::after {
-          content: '';
-          position: absolute;
-          width: 400px; height: 400px;
-          background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%);
-          bottom: -50px; right: -50px;
-          animation: glow-move 8s ease-in-out infinite reverse;
+        .lp-shield-outer::after {
+          content: ''; position: absolute; inset: -18px; border-radius: 50%;
+          border: 1px solid rgba(14,165,233,0.08);
+          animation: ring-pulse 3s ease-in-out infinite 0.5s;
         }
 
-        @keyframes glow-move {
-          0%, 100% { transform: translate(0, 0); }
-          50% { transform: translate(30px, 30px); }
+        @keyframes ring-pulse {
+          0%,100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.05); opacity: 0.6; }
         }
 
-        .brand-section {
-          text-align: center;
-          z-index: 2;
-          animation: fadeInUp 0.8s ease-out;
-        }
-
-        .brand-logo {
+        .lp-shield-inner {
           width: 100px; height: 100px;
-          background: linear-gradient(135deg, #6366f1, #3b82f6, #8b5cf6);
-          border-radius: 28px;
-          display: flex; align-items: center; justify-content: center;
+          background: linear-gradient(135deg, #0ea5e9, #3b82f6, #6366f1);
+          border-radius: 50%; display: flex; align-items: center; justify-content: center;
           font-size: 3rem;
-          margin: 0 auto 1.5rem;
-          box-shadow: 0 20px 60px rgba(99,102,241,0.4);
-          animation: logo-pulse 3s ease-in-out infinite;
-          position: relative;
+          box-shadow: 0 0 40px rgba(14,165,233,0.5), 0 0 80px rgba(14,165,233,0.2);
         }
 
-        .brand-logo::after {
-          content: '';
-          position: absolute;
-          inset: -3px;
-          border-radius: 31px;
-          background: linear-gradient(135deg, #6366f1, #3b82f6, #8b5cf6);
-          z-index: -1;
-          opacity: 0.5;
-          filter: blur(10px);
-          animation: logo-pulse 3s ease-in-out infinite;
+        .lp-brand { text-align: center; margin-bottom: 3rem; }
+
+        .lp-brand h1 {
+          font-size: 2.4rem; font-weight: 800; color: white;
+          letter-spacing: -1px; line-height: 1.1; margin-bottom: 0.75rem;
         }
 
-        @keyframes logo-pulse {
-          0%, 100% { box-shadow: 0 20px 60px rgba(99,102,241,0.4); transform: scale(1); }
-          50% { box-shadow: 0 25px 80px rgba(99,102,241,0.6); transform: scale(1.03); }
+        .lp-brand h1 span {
+          background: linear-gradient(90deg, #0ea5e9, #3b82f6, #818cf8);
+          -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
 
-        .brand-title {
-          font-size: 2.2rem;
-          font-weight: 800;
-          color: white;
-          letter-spacing: -0.5px;
-          margin-bottom: 0.5rem;
+        .lp-brand p {
+          color: rgba(255,255,255,0.4); font-size: 0.95rem; line-height: 1.6; max-width: 340px;
         }
 
-        .brand-title span {
-          background: linear-gradient(90deg, #6366f1, #3b82f6, #8b5cf6);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
+        .lp-features {
+          display: flex; flex-direction: column; gap: 1rem;
+          width: 100%; max-width: 360px;
         }
 
-        .brand-subtitle {
-          color: rgba(255,255,255,0.5);
-          font-size: 0.95rem;
-          margin-bottom: 3rem;
-          letter-spacing: 0.3px;
-        }
-
-        .stats-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 1rem;
-          width: 100%;
-          max-width: 380px;
-          margin-bottom: 2.5rem;
-        }
-
-        .stat-card {
-          background: rgba(255,255,255,0.05);
-          border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 16px;
-          padding: 1.25rem;
-          text-align: center;
-          backdrop-filter: blur(10px);
+        .lp-feat {
+          display: flex; align-items: center; gap: 1rem;
+          background: rgba(14,165,233,0.05);
+          border: 1px solid rgba(14,165,233,0.12);
+          border-radius: 14px; padding: 1rem 1.25rem;
           transition: all 0.3s;
-          animation: fadeInUp 0.8s ease-out;
+          animation: fadeInLeft 0.6s ease-out both;
         }
 
-        .stat-card:hover {
-          background: rgba(255,255,255,0.08);
-          border-color: rgba(99,102,241,0.4);
-          transform: translateY(-3px);
+        .lp-feat:hover {
+          background: rgba(14,165,233,0.1);
+          border-color: rgba(14,165,233,0.3);
+          transform: translateX(4px);
         }
 
-        .stat-value {
-          font-size: 1.6rem;
-          font-weight: 800;
-          background: linear-gradient(90deg, #6366f1, #3b82f6);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
+        .lp-feat-icon {
+          width: 42px; height: 42px; border-radius: 12px;
+          background: linear-gradient(135deg, rgba(14,165,233,0.2), rgba(59,130,246,0.2));
+          border: 1px solid rgba(14,165,233,0.2);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 1.2rem; flex-shrink: 0;
         }
 
-        .stat-label {
-          font-size: 0.75rem;
-          color: rgba(255,255,255,0.5);
-          margin-top: 0.2rem;
-        }
+        .lp-feat-text h4 { color: white; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.15rem; }
+        .lp-feat-text p { color: rgba(255,255,255,0.4); font-size: 0.78rem; }
 
-        .features-list {
-          display: flex;
-          flex-direction: column;
-          gap: 0.75rem;
-          width: 100%;
-          max-width: 380px;
-        }
-
-        .feature-item {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          color: rgba(255,255,255,0.7);
-          font-size: 0.9rem;
-          animation: fadeInLeft 0.8s ease-out;
-        }
-
-        .feature-dot {
-          width: 8px; height: 8px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, #6366f1, #3b82f6);
-          flex-shrink: 0;
-          box-shadow: 0 0 8px rgba(99,102,241,0.6);
-        }
-
-        /* ── RIGHT PANEL ── */
-        .right-panel {
-          width: 480px;
-          background: #0f1117;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 3rem 2.5rem;
-          position: relative;
+        /* RIGHT */
+        .lp-right {
+          width: 460px; background: rgba(255,255,255,0.02);
           border-left: 1px solid rgba(255,255,255,0.05);
+          display: flex; align-items: center; justify-content: center;
+          padding: 3rem 2.5rem; position: relative; z-index: 1;
+          backdrop-filter: blur(20px);
         }
 
-        .login-form-wrapper {
+        .lp-card {
           width: 100%;
-          animation: fadeInRight 0.8s ease-out;
+          animation: fadeInRight 0.7s ease-out;
         }
 
-        .form-header {
-          margin-bottom: 2rem;
+        .lp-card-header { margin-bottom: 2rem; }
+
+        .lp-card-header h2 {
+          font-size: 1.75rem; font-weight: 700; color: white; margin-bottom: 0.4rem;
         }
 
-        .form-header h2 {
-          font-size: 1.8rem;
-          font-weight: 700;
-          color: white;
-          margin-bottom: 0.4rem;
+        .lp-card-header p { color: rgba(255,255,255,0.35); font-size: 0.88rem; }
+
+        /* Role selector */
+        .lp-roles {
+          display: grid; grid-template-columns: 1fr 1fr 1fr;
+          gap: 0.6rem; margin-bottom: 1.75rem;
         }
 
-        .form-header p {
-          color: rgba(255,255,255,0.4);
-          font-size: 0.9rem;
+        .lp-role {
+          padding: 0.75rem 0.5rem;
+          border-radius: 12px; cursor: pointer;
+          border: 1px solid rgba(255,255,255,0.07);
+          background: rgba(255,255,255,0.03);
+          text-align: center; transition: all 0.25s;
         }
 
-        .role-tabs {
-          display: flex;
+        .lp-role:hover { border-color: rgba(14,165,233,0.3); background: rgba(14,165,233,0.05); }
+
+        .lp-role.active {
+          border-color: #0ea5e9;
+          background: linear-gradient(135deg, rgba(14,165,233,0.15), rgba(59,130,246,0.1));
+          box-shadow: 0 0 20px rgba(14,165,233,0.15);
+        }
+
+        .lp-role-icon { font-size: 1.4rem; margin-bottom: 0.3rem; }
+        .lp-role-name { font-size: 0.78rem; font-weight: 600; color: rgba(255,255,255,0.6); }
+        .lp-role.active .lp-role-name { color: #7dd3fc; }
+
+        /* Inputs */
+        .lp-field { margin-bottom: 1.1rem; }
+
+        .lp-field label {
+          display: block; font-size: 0.82rem; font-weight: 500;
+          color: rgba(255,255,255,0.5); margin-bottom: 0.45rem; letter-spacing: 0.3px;
+        }
+
+        .lp-input-wrap { position: relative; }
+
+        .lp-input-icon {
+          position: absolute; left: 0.9rem; top: 50%;
+          transform: translateY(-50%); font-size: 0.95rem; opacity: 0.4; pointer-events: none;
+        }
+
+        .lp-input {
+          width: 100%; padding: 0.82rem 1rem 0.82rem 2.6rem;
           background: rgba(255,255,255,0.04);
-          border-radius: 12px;
-          padding: 4px;
-          margin-bottom: 1.75rem;
-          border: 1px solid rgba(255,255,255,0.06);
-        }
-
-        .role-tab {
-          flex: 1;
-          padding: 0.6rem;
-          border: none;
-          border-radius: 9px;
-          cursor: pointer;
-          font-size: 0.85rem;
-          font-weight: 600;
-          transition: all 0.25s;
-          background: transparent;
-          color: rgba(255,255,255,0.4);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.4rem;
-        }
-
-        .role-tab.active {
-          background: linear-gradient(135deg, #6366f1, #3b82f6);
-          color: white;
-          box-shadow: 0 4px 15px rgba(99,102,241,0.4);
-        }
-
-        .role-tab:hover:not(.active) {
-          color: rgba(255,255,255,0.7);
-          background: rgba(255,255,255,0.06);
-        }
-
-        .form-group {
-          margin-bottom: 1.25rem;
-        }
-
-        .form-label {
-          display: block;
-          font-size: 0.85rem;
-          font-weight: 600;
-          color: rgba(255,255,255,0.6);
-          margin-bottom: 0.5rem;
-          letter-spacing: 0.3px;
-        }
-
-        .input-wrapper {
-          position: relative;
-        }
-
-        .input-icon {
-          position: absolute;
-          left: 1rem;
-          top: 50%;
-          transform: translateY(-50%);
-          font-size: 1rem;
-          opacity: 0.5;
-        }
-
-        .form-input {
-          width: 100%;
-          padding: 0.85rem 1rem 0.85rem 2.75rem;
-          background: rgba(255,255,255,0.05);
           border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 12px;
-          color: white;
-          font-size: 0.95rem;
-          outline: none;
-          transition: all 0.25s;
+          border-radius: 11px; color: white; font-size: 0.92rem;
+          outline: none; transition: all 0.25s; font-family: inherit;
         }
 
-        .form-input::placeholder { color: rgba(255,255,255,0.25); }
+        .lp-input::placeholder { color: rgba(255,255,255,0.2); }
 
-        .form-input:focus {
-          border-color: #6366f1;
-          background: rgba(99,102,241,0.08);
-          box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+        .lp-input:focus {
+          border-color: #0ea5e9;
+          background: rgba(14,165,233,0.06);
+          box-shadow: 0 0 0 3px rgba(14,165,233,0.12);
         }
 
-        .eye-btn {
-          position: absolute;
-          right: 1rem;
-          top: 50%;
-          transform: translateY(-50%);
-          background: none;
-          border: none;
-          cursor: pointer;
-          font-size: 1rem;
-          opacity: 0.5;
-          transition: opacity 0.2s;
+        .lp-eye {
+          position: absolute; right: 0.9rem; top: 50%;
+          transform: translateY(-50%); background: none; border: none;
+          cursor: pointer; font-size: 0.95rem; opacity: 0.4; transition: opacity 0.2s;
+        }
+        .lp-eye:hover { opacity: 0.8; }
+
+        /* Error */
+        .lp-error {
+          background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25);
+          border-radius: 10px; padding: 0.7rem 0.9rem;
+          color: #fca5a5; font-size: 0.83rem; margin-bottom: 1.1rem;
+          display: flex; align-items: center; gap: 0.5rem;
         }
 
-        .eye-btn:hover { opacity: 1; }
-
-        .error-box {
-          background: rgba(239,68,68,0.1);
-          border: 1px solid rgba(239,68,68,0.3);
-          border-radius: 10px;
-          padding: 0.75rem 1rem;
-          color: #fca5a5;
-          font-size: 0.85rem;
-          margin-bottom: 1.25rem;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
+        /* Submit */
+        .lp-btn {
+          width: 100%; padding: 0.88rem; border: none; border-radius: 12px;
+          font-size: 0.95rem; font-weight: 700; cursor: pointer; color: white;
+          background: linear-gradient(135deg, #0ea5e9, #3b82f6);
+          box-shadow: 0 8px 24px rgba(14,165,233,0.3);
+          display: flex; align-items: center; justify-content: center; gap: 0.6rem;
+          transition: all 0.3s; margin-bottom: 1.25rem; font-family: inherit;
+          letter-spacing: 0.2px;
         }
 
-        .submit-btn {
-          width: 100%;
-          padding: 0.9rem;
-          border: none;
-          border-radius: 12px;
-          font-size: 1rem;
-          font-weight: 700;
-          cursor: pointer;
-          background: linear-gradient(135deg, #6366f1, #3b82f6);
-          color: white;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.6rem;
-          transition: all 0.3s;
-          box-shadow: 0 8px 25px rgba(99,102,241,0.35);
-          margin-bottom: 1.25rem;
-          letter-spacing: 0.3px;
-        }
-
-        .submit-btn:hover:not(:disabled) {
+        .lp-btn:hover:not(:disabled) {
           transform: translateY(-2px);
-          box-shadow: 0 12px 35px rgba(99,102,241,0.5);
+          box-shadow: 0 12px 32px rgba(14,165,233,0.45);
         }
 
-        .submit-btn:disabled {
-          opacity: 0.7;
-          cursor: not-allowed;
-          transform: none;
-        }
+        .lp-btn:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
 
-        .submit-btn.admin-btn {
-          background: linear-gradient(135deg, #8b5cf6, #6366f1);
-          box-shadow: 0 8px 25px rgba(139,92,246,0.35);
-        }
+        .lp-btn.admin { background: linear-gradient(135deg, #6366f1, #3b82f6); box-shadow: 0 8px 24px rgba(99,102,241,0.3); }
+        .lp-btn.admin:hover:not(:disabled) { box-shadow: 0 12px 32px rgba(99,102,241,0.45); }
 
-        .submit-btn.admin-btn:hover:not(:disabled) {
-          box-shadow: 0 12px 35px rgba(139,92,246,0.5);
-        }
-
-        .spinner {
-          width: 18px; height: 18px;
+        .lp-spin {
+          width: 17px; height: 17px;
           border: 2px solid rgba(255,255,255,0.3);
-          border-top: 2px solid white;
-          border-radius: 50%;
-          animation: spin 0.8s linear infinite;
+          border-top-color: white; border-radius: 50%;
+          animation: spin 0.7s linear infinite;
         }
 
-        .divider {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          margin-bottom: 1.25rem;
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Divider */
+        .lp-div {
+          display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.1rem;
         }
+        .lp-div-line { flex: 1; height: 1px; background: rgba(255,255,255,0.07); }
+        .lp-div-txt { color: rgba(255,255,255,0.25); font-size: 0.78rem; }
 
-        .divider-line {
-          flex: 1;
-          height: 1px;
-          background: rgba(255,255,255,0.08);
+        /* Guest */
+        .lp-guest {
+          width: 100%; padding: 0.82rem; border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 11px; background: rgba(255,255,255,0.03);
+          color: rgba(255,255,255,0.5); font-size: 0.88rem; font-weight: 500;
+          cursor: pointer; transition: all 0.25s; margin-bottom: 1.5rem;
+          display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+          font-family: inherit;
         }
+        .lp-guest:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); color: white; }
 
-        .divider-text {
-          color: rgba(255,255,255,0.3);
-          font-size: 0.8rem;
-        }
+        /* Footer */
+        .lp-footer { display: flex; justify-content: space-between; align-items: center; }
+        .lp-footer a { color: #38bdf8; text-decoration: none; font-size: 0.83rem; font-weight: 500; transition: color 0.2s; }
+        .lp-footer a:hover { color: #7dd3fc; }
 
-        .guest-btn {
-          width: 100%;
-          padding: 0.85rem;
-          border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 12px;
-          background: rgba(255,255,255,0.04);
-          color: rgba(255,255,255,0.6);
-          font-size: 0.9rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.25s;
-          margin-bottom: 1.5rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.5rem;
-        }
-
-        .guest-btn:hover {
-          background: rgba(255,255,255,0.08);
-          border-color: rgba(255,255,255,0.2);
-          color: white;
-        }
-
-        .form-footer {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-
-        .form-footer a {
-          color: #6366f1;
-          text-decoration: none;
-          font-size: 0.85rem;
-          font-weight: 500;
-          transition: color 0.2s;
-        }
-
-        .form-footer a:hover { color: #818cf8; }
-
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
+        /* Animations */
         @keyframes fadeInLeft {
           from { opacity: 0; transform: translateX(-20px); }
           to { opacity: 1; transform: translateX(0); }
         }
-
         @keyframes fadeInRight {
           from { opacity: 0; transform: translateX(20px); }
           to { opacity: 1; transform: translateX(0); }
         }
 
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-
-        /* Floating particles */
-        .particle {
-          position: absolute;
-          border-radius: 50%;
-          background: rgba(99,102,241,0.3);
-          animation: float-particle linear infinite;
-          pointer-events: none;
-        }
-
-        @keyframes float-particle {
-          0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-          10% { opacity: 1; }
-          90% { opacity: 1; }
-          100% { transform: translateY(-100px) rotate(720deg); opacity: 0; }
-        }
-
+        /* Responsive */
         @media (max-width: 900px) {
-          .login-page { flex-direction: column; }
-          .left-panel { padding: 2rem; min-height: auto; }
-          .right-panel { width: 100%; padding: 2rem 1.5rem; border-left: none; border-top: 1px solid rgba(255,255,255,0.05); }
-          .stats-grid { grid-template-columns: repeat(4,1fr); }
-          .brand-title { font-size: 1.6rem; }
+          .lp { flex-direction: column; }
+          .lp-left { padding: 2.5rem 1.5rem; }
+          .lp-right { width: 100%; border-left: none; border-top: 1px solid rgba(255,255,255,0.05); padding: 2rem 1.5rem; }
+          .lp-shield-outer { width: 120px; height: 120px; }
+          .lp-shield-inner { width: 76px; height: 76px; font-size: 2.2rem; }
+          .lp-brand h1 { font-size: 1.8rem; }
         }
       `}</style>
 
-      <div className="login-page">
+      <div className="lp">
+        <div className="lp-bg" />
+        <div className="lp-grid" />
 
-        {/* ── LEFT PANEL ── */}
-        <div className="left-panel">
-
-          {/* Floating particles */}
-          {[
-            {w:6,h:6,l:'10%',dur:'12s',del:'0s'},
-            {w:4,h:4,l:'25%',dur:'15s',del:'3s'},
-            {w:8,h:8,l:'50%',dur:'10s',del:'1s'},
-            {w:5,h:5,l:'70%',dur:'14s',del:'5s'},
-            {w:3,h:3,l:'85%',dur:'11s',del:'2s'},
-          ].map((p,i) => (
-            <div key={i} className="particle" style={{ width:p.w, height:p.h, left:p.l, animationDuration:p.dur, animationDelay:p.del }} />
-          ))}
-
-          <div className="brand-section">
-            <div className="brand-logo">🛡️</div>
-            <h1 className="brand-title">Anti<span>Phishing</span></h1>
-            <p className="brand-subtitle">Advanced Cybersecurity Protection Platform</p>
-
-            <div className="stats-grid">
-              {[
-                { val:'10K+', label:'URLs Scanned' },
-                { val:'2.5K+', label:'Threats Blocked' },
-                { val:'500+', label:'Users Protected' },
-                { val:'99.9%', label:'Uptime' },
-              ].map(s => (
-                <div key={s.label} className="stat-card">
-                  <div className="stat-value">{s.val}</div>
-                  <div className="stat-label">{s.label}</div>
-                </div>
-              ))}
+        {/* ── LEFT ── */}
+        <div className="lp-left">
+          <div className="lp-shield">
+            <div className="lp-shield-outer">
+              <div className="lp-shield-inner">🛡️</div>
             </div>
+          </div>
 
-            <div className="features-list">
-              {[
-                'Real-time phishing URL detection',
-                'Google Safe Browsing + PhishTank integration',
-                'Heuristic AI-powered threat analysis',
-                'Interactive security lessons & quizzes',
-                'Role-based access control system',
-              ].map(f => (
-                <div key={f} className="feature-item">
-                  <div className="feature-dot" />
-                  {f}
+          <div className="lp-brand">
+            <h1>Anti<span>Phishing</span><br />Platform</h1>
+            <p>Protect yourself from cyber threats with real-time phishing detection, security education, and advanced threat intelligence.</p>
+          </div>
+
+          <div className="lp-features">
+            {[
+              { icon: '🔍', title: 'Real-Time Detection', desc: 'Google Safe Browsing + PhishTank + AI' },
+              { icon: '🎓', title: 'Security Education', desc: '10 lessons & 5 interactive quizzes' },
+              { icon: '📊', title: 'Threat Analytics', desc: 'Detailed scan history & reports' },
+              { icon: '🔐', title: 'Secure & Private', desc: 'JWT authentication & data encryption' },
+            ].map((f, i) => (
+              <div key={f.title} className="lp-feat" style={{ animationDelay: `${i * 0.1}s` }}>
+                <div className="lp-feat-icon">{f.icon}</div>
+                <div className="lp-feat-text">
+                  <h4>{f.title}</h4>
+                  <p>{f.desc}</p>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* ── RIGHT PANEL ── */}
-        <div className="right-panel">
-          <div className="login-form-wrapper">
+        {/* ── RIGHT ── */}
+        <div className="lp-right">
+          <div className="lp-card">
 
-            <div className="form-header">
-              <h2>Welcome back 👋</h2>
-              <p>Sign in to your account to continue</p>
+            <div className="lp-card-header">
+              <h2>Sign In</h2>
+              <p>Welcome back! Please enter your credentials.</p>
             </div>
 
-            {/* Role Tabs */}
-            <div className="role-tabs">
+            {/* Role Selector */}
+            <div className="lp-roles">
               {[
-                { val:'user', icon:'👤', label:'User' },
-                { val:'admin', icon:'👨💼', label:'Admin' },
-                { val:'guest', icon:'👥', label:'Guest' },
+                { val: 'user', icon: '👤', name: 'User' },
+                { val: 'admin', icon: '👨💼', name: 'Admin' },
+                { val: 'guest', icon: '👥', name: 'Guest' },
               ].map(r => (
-                <button key={r.val} className={`role-tab ${role===r.val?'active':''}`} onClick={() => setRole(r.val)} type="button">
-                  {r.icon} {r.label}
-                </button>
+                <div key={r.val} className={`lp-role ${role === r.val ? 'active' : ''}`} onClick={() => setRole(r.val)}>
+                  <div className="lp-role-icon">{r.icon}</div>
+                  <div className="lp-role-name">{r.name}</div>
+                </div>
               ))}
             </div>
 
-            {error && (
-              <div className="error-box">⚠️ {error}</div>
-            )}
+            {error && <div className="lp-error">⚠️ {error}</div>}
 
             <form onSubmit={submit}>
               {role !== 'guest' && (
                 <>
-                  <div className="form-group">
-                    <label className="form-label">Email Address</label>
-                    <div className="input-wrapper">
-                      <span className="input-icon">📧</span>
-                      <input type="email" className="form-input" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} required />
+                  <div className="lp-field">
+                    <label>Email Address</label>
+                    <div className="lp-input-wrap">
+                      <span className="lp-input-icon">📧</span>
+                      <input className="lp-input" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required />
                     </div>
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Password</label>
-                    <div className="input-wrapper">
-                      <span className="input-icon">🔒</span>
-                      <input type={showPassword ? "text" : "password"} className="form-input" placeholder="Enter your password" value={password} onChange={e => setPassword(e.target.value)} required />
-                      <button type="button" className="eye-btn" onClick={() => setShowPassword(!showPassword)}>
+                  <div className="lp-field">
+                    <label>Password</label>
+                    <div className="lp-input-wrap">
+                      <span className="lp-input-icon">🔒</span>
+                      <input className="lp-input" type={showPassword ? 'text' : 'password'} placeholder="Enter your password" value={password} onChange={e => setPassword(e.target.value)} required />
+                      <button type="button" className="lp-eye" onClick={() => setShowPassword(!showPassword)}>
                         {showPassword ? '👁️' : '🙈'}
                       </button>
                     </div>
@@ -595,33 +403,32 @@ export default function Login() {
                 </>
               )}
 
-              {role === 'guest' ? (
-                <button type="submit" className="submit-btn" disabled={loading}>
-                  {loading ? <div className="spinner" /> : '👥'} Continue as Guest
-                </button>
-              ) : (
-                <button type="submit" className={`submit-btn ${role==='admin'?'admin-btn':''}`} disabled={loading}>
-                  {loading ? <><div className="spinner" /> Signing In...</> : <>{role==='admin'?'🔐':'🚀'} Sign In to {role==='admin'?'Admin Panel':'Dashboard'}</>}
-                </button>
-              )}
+              <button type="submit" className={`lp-btn ${role === 'admin' ? 'admin' : ''}`} disabled={loading}>
+                {loading
+                  ? <><div className="lp-spin" /> Signing In...</>
+                  : role === 'guest'
+                    ? <> 👥 Continue as Guest</>
+                    : <>{role === 'admin' ? '🔐' : '🚀'} Sign In to {role === 'admin' ? 'Admin Panel' : 'Dashboard'}</>
+                }
+              </button>
             </form>
 
             {role !== 'guest' && (
               <>
-                <div className="divider">
-                  <div className="divider-line" />
-                  <span className="divider-text">or</span>
-                  <div className="divider-line" />
+                <div className="lp-div">
+                  <div className="lp-div-line" />
+                  <span className="lp-div-txt">or</span>
+                  <div className="lp-div-line" />
                 </div>
-                <button className="guest-btn" onClick={() => { setRole('guest'); navigate('/guest'); }}>
+                <button className="lp-guest" onClick={() => navigate('/guest')}>
                   👥 Continue as Guest
                 </button>
               </>
             )}
 
-            <div className="form-footer">
-              <Link to="/register">Don't have an account? <strong>Sign Up</strong></Link>
-              <Link to="/forgot-password">Forgot Password?</Link>
+            <div className="lp-footer">
+              <Link to="/register">New here? <strong>Create account</strong></Link>
+              <Link to="/forgot-password">Forgot password?</Link>
             </div>
 
           </div>
