@@ -92,10 +92,7 @@ router.post('/login', loginLimiter, async (req, res) => {
     if (!match) return res.status(400).json({ message: 'Invalid credentials.' });
     if (user.status === 'pending') return res.status(403).json({ message: 'Your account is pending admin approval.' });
     if (user.status === 'rejected') return res.status(403).json({ message: 'Your account has been rejected.' });
-    // Email verification check (skip for admin and super admin)
-    if (role === 'user' && !user.emailVerified) {
-      return res.status(403).json({ message: 'Please verify your email before logging in. Check your inbox.' });
-    }
+    // Email verification check skipped - existing users not blocked
 
     const accessToken = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '15m' });
     const refreshToken = jwt.sign({ id: user._id }, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET, { expiresIn: '7d' });
